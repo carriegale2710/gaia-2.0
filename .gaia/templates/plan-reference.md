@@ -1,62 +1,136 @@
 # PLAN.md Reference
 
-This reference describes how GAIA creates and manages plans, following `/.gaia/GAIA.md` and `MEMORY_ENGINE.md` Part B.
+This reference is the single source for plan authoring and lifecycle mechanics. Task creation and execution are defined in `tasks-reference.md`; repository-specific workflow rules are in `.gaia/GAIA.md` and runtime rules are in `MEMORY_ENGINE.md` Part B.
 
 ## When to create a plan
 
-Create or replace a plan for non-trivial work: a new feature, changes across more than roughly two or three files, multiple viable approaches, architectural decisions, or unclear scope. Skip planning for a single-line fix, a fully specified one-function change, or pure research and Q&A.
+Create a new plan for non-trivial work: a new feature, changes across more than roughly two or three files, multiple viable approaches, architectural decisions, or unclear scope. Skip planning for a single-line fix, a fully specified one-function change, or pure research and Q&A. Never overwrite an existing plan; archive or transition it according to its lifecycle status.
 
 Explore before planning. Read the relevant repository files first; do not plan changes to code that has not been inspected.
 
-## Plan lifecycle and folders
+## Plan lifecycle
 
-Plans use lifecycle statuses and folders defined in `/.gaia/GAIA.md`:
+Plans use these statuses:
 
-- `draft/` — draft plans awaiting review or approval.
-- `approved/` — approved plans not currently active.
-- `on-hold/` — approved plans blocked from execution.
-- `closed/` — completed plans.
+- `draft` — context, options, and open questions; not executable.
+- `approved` — implementation-ready and eligible for activation.
+- `on-hold` — approved but blocked; record blocker IDs and unblocking conditions.
+- `closed` — completed or deliberately ended, with outcome and task mapping.
 
-`active` is an execution condition, not a separate lifecycle status. The active approved plan is represented by `/.gaia/PLAN.md`; active execution state is represented by `/.gaia/TASKS.md`.
+`active` is an execution condition, not a status. The active approved plan is `.gaia/PLAN.md`; active execution state is `.gaia/TASKS.md`.
 
-## Archive before replacement
+Plans live under `.gaia/plans/` in `draft/`, `approved/`, `on-hold/`, or `closed/`, using filenames in the format `PLAN-YYYYMMDD-NNN.md`. An approved plan activates only after explicit user approval and placement in `approved/`.
 
-If an active `.gaia/PLAN.md` exists and a new plan is needed, archive it with its matching `.gaia/TASKS.md` under `.gaia/plans/` using the next free numbered pair in the appropriate lifecycle folder:
-
-```text
-.gaia/plans/closed/PLAN-20260824-001.md
-.gaia/plans/closed/TASKS-20260824-001.md
-```
-
-Increment the number until both destination names are free. Never overwrite plan history. For a draft that is not replacing the active plan, save it under `.gaia/plans/draft/` and leave the active plan and tasks unchanged.
-
-Closed plans use filenames in the format `PLAN-YYYYMMDD-NNN.md` and live in `/.gaia/plans/closed/`.
+When replacing an active plan, preserve plan history by moving the existing plan into the appropriate lifecycle folder before creating the new plan. `TASKS.md` is temporary execution state, not a plan-history record: delete it only after every task has a concrete GitHub Issue reference. If any task remains `Issue: pending` or uses an Issue exception, preserve `TASKS.md` and do not complete the replacement.
 
 ## Required plan contents
 
 A standalone plan should include:
 
+- YAML front matter with these required fields at minimum: `id`, `status`, `created_at`, `updated_at`, `priority`. Optionally add: `blocked_by`, and `github_issue_refs`.
+- Use ISO 8601 UTC timestamps for dates and one of `draft`, `approved`, `on-hold`, or `closed` for `status`. Use an empty list for `blocked_by` and `github_issue_refs` when there are no entries.
+- Example front matter:
+
+  ```yaml
+  ---
+  id: PLAN-20260824-001
+  status: draft
+  created_at: 2026-08-24T00:00:00Z
+  updated_at: 2026-08-24T00:00:00Z
+  priority: medium
+  blocked_by: []
+  github_issue_refs: []
+  ---
+  ```
+
+Example lifecycle locations for `PLAN-20260824-001.md`:
+
+```text
+.gaia/plans/draft/PLAN-20260824-001.md       # being prepared
+.gaia/plans/approved/PLAN-20260824-001.md    # approved, not active
+.gaia/PLAN.md                                # active execution copy
+.gaia/plans/on-hold/PLAN-20260824-001.md     # approved but blocked
+.gaia/plans/closed/PLAN-20260824-001.md      # completed or ended
+```
+
+Only the active plan is copied to `.gaia/PLAN.md`; do not create a second lifecycle record with an `active` status.
+
+Example plan-level Issue mapping after activation:
+
+```yaml
+github_issue_refs:
+  - task: 1
+    issue: 123
+  - task: 2
+    issue: 124
+  - task: 3
+    issue: 125
+```
+
 - Goal — one sentence.
 - Architecture — the approach and important decisions.
 - Tech stack and dependencies — versions confirmed using the required live registry or release sources.
 - Files to create or modify — exact repository paths and one responsibility per file.
-- Ordered, bite-sized tasks.
-- Concrete implementation steps for every task; no placeholders or hand-waves.
+- An ordered task list with bite-sized task boundaries.
+- Concrete implementation steps for every task; no placeholders or hand-waves. Task checklist creation and execution follow `tasks-reference.md`.
 - Commit groups that respect repository commit batching rules.
 - Acceptance criteria and validation evidence for each task when completion claims matter.
+- An append-only `## Lifecycle Log`; each transition records the date, previous status, new status, and reason. `on-hold` transitions also record blocker IDs and unblocking conditions. Use entries such as: `- 2026-08-24T00:00:00Z | previous: draft | new: approved | reason: User approved implementation.`
+- Commit groups may contain multiple tasks. Every task in a group records the same commit reference, and no task in the group is complete until the group commit succeeds.
+
+Example task block:
+
+```markdown
+### Task 1: Add repository instructions
+
+**Files:**
+
+- Create: `.agents/repository.md`
+- Modify: `AGENTS.md`
+- Test: `tests/repository-instructions.test.md`
+
+**Interfaces:**
+
+- Consumes: existing repository conventions in `AGENTS.md`
+- Produces: documented instructions for future agents
+
+- [ ] **Step 1: Write the failing test**
+- [ ] **Step 2: Add the instructions**
+- [ ] **Step 3: Run the validation command**
+
+**Acceptance:** The instructions file exists, the test passes, and the validation command is recorded in `.gaia/TASKS.md`.
+
+**Issue:** pending
+```
+
+Example lifecycle entries:
+
+```markdown
+## Lifecycle Log
+
+- 2026-08-24T00:00:00Z | previous: draft | new: approved | reason: User approved implementation.
+- 2026-08-25T00:00:00Z | previous: approved | new: on-hold | reason: Waiting for repository access. blockers: github-access; unblocks_when: GitHub MCP connection is available.
+- 2026-08-26T00:00:00Z | previous: on-hold | new: approved | reason: GitHub MCP connection restored.
+- 2026-08-27T00:00:00Z | previous: approved | new: closed | reason: All tasks and mapped Issues completed.
+```
+
+For a closed plan, update its metadata with the final dates and outcome:
+
+```yaml
+---
+id: PLAN-20260824-001
+status: closed
+created_at: 2026-08-24T00:00:00Z
+updated_at: 2026-08-27T00:00:00Z
+approved_at: 2026-08-24T00:00:00Z
+closed_at: 2026-08-27T00:00:00Z
+priority: medium
+blocked_by: []
+github_issue_refs: [123, 124, 125]
+---
+```
 
 The plan must use exact repository names, paths, branches, and relevant URLs so it remains portable.
-
-All plans use consistent YAML metadata:
-
-- `id`
-- `status`
-- dates
-- `priority`
-- `blocked_by`
-- `github_issue_refs`
-
-Every plan contains an append-only `## Lifecycle Log`. Each transition records the date, previous status, new status, and reason. An `on-hold` transition also records blocker IDs and unblocking conditions.
 
 ## Review before execution
 
@@ -70,18 +144,18 @@ After writing the plan, review it against:
 
 Fix serious gaps before presenting the plan. Wait for explicit user approval before executing it.
 
-## Execution lifecycle
+## Activation lifecycle
 
-When the user approves execution:
+When the user explicitly approves a plan for execution:
 
-1. Read `.gaia/PLAN.md` and `.gaia/TASKS.md` first.
-2. Derive or refresh `.gaia/TASKS.md` from the approved plan.
-3. Execute only the first unchecked task that fits the turn budget.
-4. Commit the completed task using the required attribution trailer.
-5. Mark that task complete immediately after its commit succeeds, before starting the next task.
-6. Record validation evidence rather than treating file existence as proof.
-7. Continue from the first unchecked task on the next turn.
+1. Place the approved plan in `.gaia/plans/approved/`.
+2. Materialize the approved plan as `.gaia/PLAN.md`.
+3. Follow `tasks-reference.md` to derive `.gaia/TASKS.md` with one task entry per plan task and `Issue: pending` for each unmapped task.
+4. Inspect existing GitHub Issues and match each task to one equivalent open Issue where possible.
+5. Create one Issue for each task without an equivalent Issue, reusing established labels or only the minimal allowed labels: `plan`, `task`, `bug`, `research`, `design`, and `marketing`.
+6. Record exactly one Issue reference per task, or an explicit documented exception, in both the plan and corresponding task entry. Use `Issue: exception - <reason>; approved by <authority> on <ISO-8601 date>` for an exception.
+7. Activation is complete only after `.gaia/PLAN.md` and `.gaia/TASKS.md` both reflect the approved plan and every task has its Issue mapping or documented exception. Do not begin execution before this condition is satisfied.
 
-## Durable-state safety
+## Durable-state boundary
 
-Use read–modify–write for plan and task updates. Preserve unrelated content. Re-read the updated files after every write. If the complete current content or SHA is unavailable, stop rather than reconstructing the file.
+Repository durable plan records live under `.gaia/`. Sandbox `PLAN.md` and `TASKS.md` are runtime state and are not automatically interchangeable. See `tasks-reference.md` for task-state update and preservation rules.

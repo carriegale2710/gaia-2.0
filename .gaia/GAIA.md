@@ -38,8 +38,8 @@ Read-only inspection may use the branch required to answer the user's request. I
 
 1. Read the repository branch list and identify the default branch.
 2. Check whether `dev` exists.
-3. If `dev` is absent, report that it is missing and propose creating it from the repository default branch.
-4. Create `dev` only under the active permission mode and applicable approval gate.
+3. If `dev` is absent, report that it is missing and use the repository default branch only for read-only discovery while waiting for approval to create `dev` from that branch.
+4. Create `dev` only under the active permission mode and applicable approval gate. Do not perform repository changes or plan activation until the required base branch exists.
 5. Create feature, fix, and chore branches from `dev`.
 
 Branch discovery is complete when the selected base branch, default branch, and any required branch creation or approval state are known.
@@ -92,54 +92,11 @@ Synchronization is complete when the source of truth is identified for each diff
 - Do not overwrite repository memory unless the user explicitly requests an import or replacement.
 - Follow `MEMORY_ENGINE.md` for sandbox memory structure, compaction, import, export, and permission-mode behavior.
 
-## Plan lifecycle
+## Plan workflow
 
-Lifecycle statuses are:
+Plan format, lifecycle, activation, task tracking, Issue mapping, and plan-history rules are defined in `.gaia/templates/plan-reference.md`. That reference is the single source for plan mechanics.
 
-- `draft` — context, options, and open questions; not executable.
-- `approved` — implementation-ready and eligible for activation.
-- `on-hold` — approved but blocked; blocker IDs and unblocking conditions are required.
-- `closed` — completed or deliberately ended, with outcome and task mapping.
-
-`active` is an execution condition, not a separate lifecycle status. The active approved plan is represented by `/.gaia/PLAN.md`; active execution state is represented by `/.gaia/TASKS.md`.
-
-Plan folders:
-
-- `draft/` — draft plans awaiting review or approval.
-- `approved/` — approved plans not currently active.
-- `on-hold/` — approved plans blocked from execution.
-- `closed/` — completed plans.
-
-Closed plans use filenames in the format `PLAN-YYYYMMDD-NNN.md` and live in `/.gaia/plans/closed/`.
-
-All plans use consistent YAML metadata:
-
-- `id`
-- `status`
-- dates
-- `priority`
-- `blocked_by`
-- `github_issue_refs`
-
-Every plan contains an append-only `## Lifecycle Log`. Each transition records the date, previous status, new status, and reason. An `on-hold` transition also records blocker IDs and unblocking conditions.
-
-## Plan activation and Issues
-
-A plan activates only after explicit approval and placement in `approved/`.
-
-When an approved plan activates:
-
-1. Read the plan and inspect existing GitHub Issues.
-2. Match each plan task to an existing equivalent open Issue where one exists.
-3. Create one Issue for each approved task that lacks an equivalent Issue.
-4. Reuse established repository labels after inspecting the label set.
-5. If labels are absent or unclear, use only the minimal labels needed from: `plan`, `task`, `bug`, `research`, `design`, and `marketing`.
-6. Record every task-to-Issue mapping in the plan and the execution mirror.
-7. Start implementation only after the mapping and `TASKS.md` are complete.
-
-Activation is complete when every approved task has exactly one recorded Issue reference or an explicit documented exception, and `TASKS.md` reflects the approved task list.
-
-Issue completion state must match task completion state. Before closing a plan, record the final Issue mapping and outcome in the closed plan.
+Repository durable plan state is stored in `/.gaia/PLAN.md` and `/.gaia/TASKS.md` while a plan is active. These files are execution state, not additional lifecycle plans.
 
 ## Informal work and stale plans
 
@@ -162,7 +119,7 @@ The following older decisions are no longer active:
 - `PLAN-001.md` naming is replaced by `PLAN-YYYYMMDD-NNN.md`.
 - Plan archives use lifecycle folders rather than one undifferentiated archive.
 - One shared plan template is used instead of separate templates for each lifecycle state.
-- `/.gaia/GAIA.md` is authoritative for repository plan rules; `plans/README.md` provides navigation and format guidance only.
+- `.gaia/templates/plan-reference.md` is authoritative for plan mechanics; `/.gaia/GAIA.md` provides repository-specific workflow and state rules.
 - The approved Tasks-to-Issues workflow replaces read-only, Issues-as-source, and bidirectional alternatives.
 - Repository durable state uses `/.gaia/` alongside sandbox runtime state.
 
