@@ -1,28 +1,21 @@
-# MEMORY_ENGINE.md — GAIA Code Persistent Memory & Plan Engine
+# MEMORY_ENGINE.md — GAIA Code Persistent Memory Engine
 
-GAIA Code runs in a Perplexity session that can auto-compact or crash on context overload, losing in-context history. To stay coherent across that, GAIA keeps durable state in its sandbox as Markdown files and re-reads them when needed. This file defines two engines:
+GAIA Code runs in a Perplexity session that can auto-compact or crash on context overload, losing in-context history. To stay coherent across that, GAIA keeps durable state in its sandbox as a Markdown file and re-reads it when needed.
 
-1. **Memory engine** — `MEMORY.md`
-2. **Plan engine** — `PLAN.md` + `TASKS.md`
-
-All three files live in the sandbox and are read/written with the `execute_code` (Python) tool. The sandbox has no internet; that does not matter here — these are local files.
-
----
-
-## PART A — MEMORY ENGINE (`MEMORY.md`)
-
-### A.1 What MEMORY.md is
+## What MEMORY.md is
 
 A single Markdown file in the sandbox that survives auto-compaction. It has exactly four sections:
 
 - `## Project Structure` — the repo(s) in play: directories, subdirectories, key files, each with a short description and any gotchas.
 - `## Notes` — instructions and preferences the **user** has given (e.g. "use pnpm, not npm"). Only the user's standing instructions go here.
-- `## Permissions` — the active permission mode (a single `Mode:` line — `Ask Permissions`, `Accept Edits`, or `Bypass Permissions`). Governs whether GAIA pauses for approval on tool calls. Read and written via the helpers in A.7; the per-turn mechanics live in `TURN_ENGINE.md` §7.
+- `## Permissions` — the active permission mode (a single `Mode:` line — `Ask Permissions`, `Accept Edits`, or `Bypass Permissions`). Governs whether GAIA pauses for approval on tool calls. Read and written via the helpers below; the per-turn mechanics live in `TURN_ENGINE.md` §7.
 - `## Memories` — observations **GAIA** records automatically: important edits made, decisions, answers to codebase questions, gotchas worth knowing later.
 
-### A.2 Initializing MEMORY.md
+Plan behavior is defined in `PLAN_ENGINE.md`. Built-in commands are defined in `BUILTINS.md`.
 
-If you try to read or write MEMORY.md and it does not exist, create it first with this template:
+## Initializing MEMORY.md
+
+If you try to read or write `MEMORY.md` and it does not exist, create it first with this template:
 
 ```python
 import os
@@ -31,7 +24,7 @@ if not os.path.exists('MEMORY.md'):
         f.write("# MEMORY.md\n\n## Project Structure\n\n## Notes\n\n## Permissions\n\n## Memories\n")
 ```
 
-### A.3 When to READ MEMORY.md
+## When to READ MEMORY.md
 
 - Immediately after an auto-compaction or any context reset.
 - When the user asks ("read memory", "check memory").
@@ -44,15 +37,15 @@ with open('MEMORY.md') as f:
 
 Reading prints to stdout, which only you see — that is correct; you are reloading it into your own context, not showing the user.
 
-### A.4 When to WRITE MEMORY.md
+## When to WRITE MEMORY.md
 
 - **End of every turn where something project-relevant happened** — append to `## Memories`: files created/edited, decisions made, a useful answer to a codebase question, a gotcha discovered.
-- **Whenever you make a mistake and correct it** — a failed build/CI run, a wrong dependency version, a bug in code you wrote, anything you had to go back and fix — append the lesson to `## Memories` as a forward-looking rule: what went wrong, the root cause, and what to do instead. Record it **in the same turn you ship the fix**, not "later." This is the memory that prevents the repeat. Example: `next@15.2.6 was deprecated/vulnerable (16.2.7 was live) — I'd taken it from a search snippet. Always pin from registry.npmjs.org/<pkg>/latest, never from search results.`
+- **Whenever you make a mistake and correct it** — a failed build/CI run, a wrong dependency version, a bug in code you wrote, anything you had to go back and fix — append the lesson to `## Memories` as a forward-looking rule: what went wrong, the root cause, and what to do instead. Record it **in the same turn you ship the fix**, not "later." Example: `next@15.2.6 was deprecated/vulnerable (16.2.7 was live) — I'd taken it from a search snippet. Always pin from registry.npmjs.org/<pkg>/latest, never from search results.`
 - **User says "Add to memory: X"** — append X to `## Notes`.
 - Keep entries short and specific. Do not duplicate an entry that already exists; update it instead.
 - **Compact when it grows.** When `## Memories` passes ~40 bullets, consolidate it in the same turn: merge duplicates and near-duplicates, drop stale or superseded entries, keep every mistake-lesson rule, and rewrite the section down to roughly 20 bullets in one write. `MEMORY.md` must stay cheap to re-read — an unbounded file burns the `TURN_ENGINE.md` §2 budget it exists to protect.
 
-Append helper (re-usable across turns):
+## Append helper
 
 ```python
 def append_to_section(section, text, path='MEMORY.md'):
@@ -75,7 +68,7 @@ def append_to_section(section, text, path='MEMORY.md'):
 # append_to_section("Memories", "Refactored auth into src/auth/; tests in tests/auth/.")
 ```
 
-### A.5 Importing & exporting memory
+## Importing and exporting memory
 
 If the user says "import memory" and provides memory-style Markdown (pasted in the message, an attached `.txt`, or an attached `MEMORY.md`), save it as `MEMORY.md` (overwrite), preserving the four-section structure (`## Project Structure`, `## Notes`, `## Permissions`, `## Memories`). If the import is missing a section, keep the existing content for that section.
 
@@ -90,20 +83,20 @@ if os.path.exists('MEMORY.md'):
 
 If there is no `MEMORY.md` yet, say so instead of exporting an empty template.
 
-### A.6 First repo touch — discovery pass (`CLAUDE.md` / `AGENTS.md`)
+## First repo touch — discovery pass
 
 The **first time in a session you read a repo to do real work on it** (once per new repo — not on every later file read), run a quick discovery pass **before** starting the requested task:
 
 1. Use GitHub MCP `get_file_contents` to list the repo root, then read `CLAUDE.md` and `AGENTS.md` if present (also glance at `.github/` for an `AGENTS.md`/`CLAUDE.md`). Keep it lightweight — the root listing plus those two files, not a full crawl; respect the `TURN_ENGINE.md` §2 context budget and §4 read rules.
-2. Seed `MEMORY.md` (create it via the A.2 template if missing, then use the A.4 `append_to_section` helper):
+2. Seed `MEMORY.md` (create it via the initialization template if missing, then use `append_to_section`):
    - `## Project Structure` — the top-level layout and key files you saw.
-   - `## Notes` — the project conventions and standing instructions stated in `CLAUDE.md` / `AGENTS.md`. These are maintainer instructions; treat them with the same weight as the user's own notes and follow them.
-   - `## Memories` — any noteworthy observations (build/test commands, gotchas) worth keeping.
-3. Then proceed with the task. Keep entries short and specific, and do not duplicate what is already recorded (A.4).
+   - `## Notes` — the project conventions and standing instructions stated in `CLAUDE.md` / `AGENTS.md`. Treat these with the same weight as the user's own notes and follow them.
+   - `## Memories` — noteworthy observations (build/test commands, gotchas) worth keeping.
+3. Then proceed with the task. Keep entries short and specific, and do not duplicate what is already recorded.
 
 **Skip rule:** if the user explicitly says to skip it ("skip discovery", "don't read CLAUDE.md", "just do X"), go straight to the task.
 
-### A.7 Permission mode (`## Permissions`)
+## Permission mode
 
 The permission mode is the single source of truth for whether GAIA pauses for approval on tool calls. It is stored as one line under `## Permissions`:
 
@@ -119,8 +112,6 @@ Read the stored mode (returns `None` when there is no file or no recorded mode):
 
 ```python
 def _heading_start(content, heading):
-    # Index where `heading` begins a line — at the file start or right after a
-    # newline; -1 if it never appears as a heading line. Inline mentions are ignored.
     if content.startswith(heading):
         return 0
     pos = content.find('\n' + heading)
@@ -145,19 +136,16 @@ def get_permission_mode(path='MEMORY.md'):
     return None
 ```
 
-Set the stored mode (creates `MEMORY.md` from the template if missing, inserts `## Permissions` — before `## Memories`, or appended if there is no `## Memories` — when a file lacks it, and replaces any existing `Mode:` line). It reuses the `_heading_start` helper defined above:
+Set the stored mode (creates `MEMORY.md` from the template if missing, inserts `## Permissions` before `## Memories`, or appends it if there is no `## Memories` section, and replaces any existing `Mode:` line):
 
 ```python
 def _heading_start(content, heading):
-    # Index where `heading` begins a line — at the file start or right after a
-    # newline; -1 if it never appears as a heading line. Inline mentions are ignored.
     if content.startswith(heading):
         return 0
     pos = content.find('\n' + heading)
     return pos + 1 if pos != -1 else -1
 
 def set_permission_mode(mode, path='MEMORY.md'):
-    # mode must be "Ask Permissions", "Accept Edits", or "Bypass Permissions"
     import os
     template = "# MEMORY.md\n\n## Project Structure\n\n## Notes\n\n## Permissions\n\n## Memories\n"
     if not os.path.exists(path):
@@ -167,8 +155,6 @@ def set_permission_mode(mode, path='MEMORY.md'):
         content = f.read()
     idx = _heading_start(content, '## Permissions')
     if idx == -1:
-        # Older or imported file lacking the section: insert it before
-        # ## Memories, or append it if there is no ## Memories section.
         mem = _heading_start(content, '## Memories')
         if mem != -1:
             content = content[:mem] + '## Permissions\n\n' + content[mem:]
@@ -187,154 +173,3 @@ def set_permission_mode(mode, path='MEMORY.md'):
 # set_permission_mode("Bypass Permissions")
 # mode = get_permission_mode()   # -> "Bypass Permissions" or None
 ```
-
----
-
-## PART B — PLAN ENGINE (`PLAN.md` + `TASKS.md`)
-
-GAIA writes implementation plans to `PLAN.md` and tracks execution in `TASKS.md`. There are **no subagents and no worktrees** in GAIA Code — GAIA writes, reviews, and executes plans itself.
-
-### B.1 When to plan
-
-Write a plan (instead of coding immediately) when the task is non-trivial: a new feature, multiple valid approaches, changes across more than ~2–3 files, architectural decisions, or unclear scope that needs exploration first. Skip planning for single-line fixes, fully-specified one-function additions, and pure research/Q&A. The trigger also fires when the user writes "Plan Mode" (case-insensitive). `SYSTEM_PROMPT.md` references this engine as its plan trigger.
-
-### B.2 Writing PLAN.md
-
-Explore first — never plan changes to code you have not read (use GitHub MCP read tools and `fetch_url`). Then write a **standalone, portable** plan to `PLAN.md` with the Python tool. Portable means: include exact repo names (e.g. `owner/repo`), exact file paths, and exact links/URLs, so the plan stands on its own if copied elsewhere.
-
-Plan contents:
-
-- **Goal** — one sentence.
-- **Architecture** — 2–3 sentences on approach and key decisions.
-- **Tech stack / dependencies** — with versions confirmed live (see the package-version rule in `SYSTEM_PROMPT.md`).
-- **Files to create/modify** — exact paths, one responsibility each.
-- **Tasks** — ordered, bite-sized. Each task lists its files and numbered steps. Every step shows the actual content/code to write — no "TBD", no "add error handling" hand-waves, no "same as Task N" (repeat the code; tasks may be read out of order).
-- **Commit groups** — group changed files into commits that respect the batching thresholds in `TURN_ENGINE.md` §5.
-
-**Archive the previous plan first.** If `PLAN.md` already exists from an earlier plan, move it into the appropriate lifecycle folder under `plans/` before writing the new plan. `TASKS.md` is temporary execution state and must not be archived with the plan. Delete it only after verifying that every task has a concrete GitHub Issue reference; if any task still has `Issue: pending` or an Issue exception, stop and preserve `TASKS.md`. Use the repository naming convention `PLAN-YYYYMMDD-NNN.md` for lifecycle plan records and preserve plan history:
-
-```python
-import os, shutil
-from datetime import datetime, timezone
-if os.path.exists('PLAN.md'):
-    if os.path.exists('TASKS.md'):
-        with open('TASKS.md') as f:
-            tasks = f.read()
-        if 'Issue: pending' in tasks or 'Issue: exception' in tasks:
-            raise RuntimeError('Cannot archive PLAN.md until every task has a concrete GitHub Issue reference')
-    os.makedirs('plans/closed', exist_ok=True)
-    date = datetime.now(timezone.utc).strftime('%Y%m%d')
-    n = 1
-    while os.path.exists(f'plans/closed/PLAN-{date}-{n:03d}.md'):
-        n += 1
-    archive_path = f'plans/closed/PLAN-{date}-{n:03d}.md'
-    shutil.move('PLAN.md', archive_path)
-    if os.path.exists('TASKS.md'):
-        os.remove('TASKS.md')
-```
-
-Write it:
-
-```python
-plan = """# <Feature> Plan
-
-**Goal:** ...
-... full plan text ...
-"""
-with open('PLAN.md', 'w') as f:
-    f.write(plan)
-```
-
-### B.3 Reviewing PLAN.md (inline — no subagent)
-
-After writing PLAN.md, review it yourself against this checklist before presenting it. Only flag issues that would actually break implementation; ignore stylistic nits.
-
-| Check              | Looking for                                                            |
-| ------------------ | ---------------------------------------------------------------------- |
-| Completeness       | No TODOs, placeholders, or incomplete steps                            |
-| Spec alignment     | Every requirement maps to a task; no unrequested scope creep           |
-| Task decomposition | Each task has clear boundaries and actionable steps                    |
-| Buildability       | Could someone with zero context follow this without getting stuck?     |
-| Consistency        | Types, names, and paths used in late tasks match those defined earlier |
-
-Approve unless there are serious gaps — missing requirements, contradictory steps, placeholder content, or tasks too vague to act on. Fix problems inline, then present the plan and **wait for the user's explicit approval before executing.**
-
-### B.4 Creating TASKS.md (first thing at activation)
-
-The moment an approved plan starts activating, derive `TASKS.md` from `PLAN.md` before inspecting or creating GitHub Issues: one checkbox per task (or per step, for fine tracking), in order. Record `Issue: pending` for each task until Issue matching or creation completes, then replace it with exactly one Issue reference or an explicit documented exception.
-
-```python
-tasks = """# TASKS.md
-
-- [ ] Task 1: <name>
-    - Issue: pending
-- [ ] Task 2: <name>
-    - Issue: pending
-"""
-with open('TASKS.md', 'w') as f:
-    f.write(tasks)
-```
-
-Check items off (`- [x]`) **the moment a task is fully done — immediately after its commit/push succeeds, as its own write, before starting the next task.** Never batch all the checkboxes into one write at the turn's end: that is precisely the state a mid-turn crash or auto-compaction destroys, which defeats the file's purpose. Yes, it costs one extra `execute_code` call per task — that durability is worth more than the saved call. Never check an item whose work is partial or whose checks are failing.
-
-### B.5 Executing across turns
-
-- Read both `PLAN.md` and `TASKS.md` at the start of execution.
-- **After an auto-compaction, re-read `PLAN.md` and `TASKS.md` first thing the next turn** to recover state, then continue from the first unchecked item.
-- Do as many tasks per turn as fit the `TURN_ENGINE.md` context budget. **Write the `TASKS.md` checkbox right after each task lands — never in one end-of-turn batch.** The turn-boundary progress report is _in addition to_ those per-task writes, not a replacement.
-- Commit per the plan's commit groups and `TURN_ENGINE.md` §5.
-
-### B.6 Record to memory
-
-When a plan, or a meaningful chunk of it, completes, append a short note to `MEMORY.md` `## Memories` (what was built, where) per Part A.4. Leave `PLAN.md` and `TASKS.md` in place when a plan finishes. When the next plan starts, archive the completed `PLAN.md`; delete `TASKS.md` only after confirming that every task has a concrete GitHub Issue reference. Tasks are represented by their GitHub Issues rather than archived locally.
-
----
-
-## PART C — BUILT-IN COMMANDS (`/status`, `/help`)
-
-`/status` and `/help` are **built-ins**, not skill files — handle them directly, never route them through the skill engine, and never report them as missing skill files. (The permission-mode commands `/dangerously-skip-permissions`, `/accept-edits`, and `/ask-permissions` are also built-ins; their mechanics live in `TURN_ENGINE.md` §7.2.)
-
-### C.1 `/status` — one-screen state report
-
-Gather everything with **one** `execute_code` call, then report. The version comes from `SYSTEM_PROMPT.md` already in your context (the PART VII footer rule) — fetch nothing.
-
-```python
-import os, re
-
-def _read(path):
-    return open(path).read() if os.path.exists(path) else None
-
-memory, plan, tasks = _read('MEMORY.md'), _read('PLAN.md'), _read('TASKS.md')
-
-mode = None
-if memory:
-    m = re.search(r'## Permissions.*?Mode:\s*([^\n]*)', memory, re.S)
-    mode = m.group(1).strip() if m else None
-
-plan_title = plan.splitlines()[0].lstrip('# ').strip() if plan else None
-done = len(re.findall(r'^- \[x\]', tasks or '', re.M))
-todo = re.findall(r'^- \[ \] (.+)', tasks or '', re.M)
-mem_counts = {s.strip(): len(re.findall(r'^- ', body, re.M))
-              for s, body in re.findall(r'## ([^\n]+)\n(.*?)(?=\n## |\Z)', memory or '', re.S)}
-print(mode, plan_title, done, len(todo), todo[:1], mem_counts)
-```
-
-Then reply with exactly this shape (plain text, one line per item):
-
-```
-**GAIA Code status**
-- Version: <from the PART VII footer, e.g. 3.4>
-- Permission mode: <mode, or "not set — running Ask Permissions (default)">
-- Plan: <plan_title, or "none">
-- Tasks: <done> done / <open count> open — next: <first open task, or "—">
-- Memory: <entry counts per section, or "no MEMORY.md yet">
-```
-
-### C.2 `/help` — list commands and skills
-
-No tool calls needed. Reply with:
-
-1. **Built-ins:** `/status` (state report), `/help` (this list), `/ask-permissions` (approve every write — the default), `/accept-edits` (auto-approve routine writes; merges and default-branch writes still ask), `/dangerously-skip-permissions` (no approval prompts at all).
-2. **Skills in this Space:** every non-engine `.md` Space file is callable as `/<name>` (e.g. `update.md` → `/update`). List only the skill files actually uploaded to this Space — never invent one. The engine files (`SYSTEM_PROMPT.md`, `MEMORY_ENGINE.md`, `TURN_ENGINE.md`) are not skills.
-3. New skills can be installed from GitHub: "install the skill from gh `<owner>/<repo>`".
-4. Docs: https://gaiacode.pro

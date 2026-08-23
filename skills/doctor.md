@@ -13,7 +13,7 @@ This skill is **read-only**: no commits, no file writes, no Space changes.
 
 ## Checks
 
-1. **Engine files.** Confirm each of `SYSTEM_PROMPT.md`, `MEMORY_ENGINE.md`, and
+1. **Engine files.** Confirm each of `SYSTEM_PROMPT.md`, `MEMORY_ENGINE.md`, `PLAN_ENGINE.md`, `BUILTINS.md`, and
    `TURN_ENGINE.md` is available to you as a Space file (you read them at startup —
    if one is absent from your context, it was not uploaded). ⚠️ for any file you are confident is missing;
    ⏭️ if you are genuinely uncertain whether it was uploaded — do not report ⚠️ on a file you might

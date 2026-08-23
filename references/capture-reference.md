@@ -103,15 +103,20 @@ For informal tasks captured without a formal plan.
 
 Append new tasks under `## Backlog`. Move to `## Done` when complete.
 
-## Archive existing PLAN.md + TASKS.md before writing new ones
+## Archive existing PLAN.md before writing a new one
 
 ```python
 import os, shutil
-for fname in ['PLAN.md', 'TASKS.md']:
-    if os.path.exists(fname):
-        os.makedirs('plans', exist_ok=True)
-        base = fname.replace('.md', '')
-        n = 1
-        while os.path.exists(f'plans/{base}-{n:03d}.md'): n += 1
-        shutil.move(fname, f'plans/{base}-{n:03d}.md')
+if os.path.exists('PLAN.md'):
+    if os.path.exists('TASKS.md'):
+        with open('TASKS.md') as f:
+            tasks = f.read()
+        if 'Issue: pending' in tasks or 'Issue: exception' in tasks:
+            raise RuntimeError('Cannot archive PLAN.md until every task has a concrete GitHub Issue reference')
+    os.makedirs('plans/closed', exist_ok=True)
+    n = 1
+    while os.path.exists(f'plans/closed/PLAN-{n:03d}.md'): n += 1
+    shutil.move('PLAN.md', f'plans/closed/PLAN-{n:03d}.md')
+    if os.path.exists('TASKS.md'):
+        os.remove('TASKS.md')
 ```

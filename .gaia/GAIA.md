@@ -90,7 +90,7 @@ Synchronization is complete when the source of truth is identified for each diff
 
 - Append durable memory to the latest existing repository memory file; preserve prior entries.
 - Do not overwrite repository memory unless the user explicitly requests an import or replacement.
-- Follow `MEMORY_ENGINE.md` for sandbox memory structure, compaction, import, export, and permission-mode behavior.
+- Follow `MEMORY_ENGINE.md` for sandbox memory structure, compaction, import, export, and permission-mode behavior. Follow `PLAN_ENGINE.md` for planning and tasks, and `BUILTINS.md` for built-in commands.
 
 ## Plan workflow
 

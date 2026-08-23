@@ -1,6 +1,6 @@
 # TASKS.md Reference
 
-This reference is the single source for task creation and execution. It defines how GAIA creates and manages the repository task checklist at `.gaia/TASKS.md`, following `prompts/MEMORY_ENGINE.md` Part B. Plan authoring and lifecycle rules are defined in `plan-reference.md`.
+This reference is the single source for task creation and execution. It defines how GAIA creates and manages the repository task checklist at `.gaia/TASKS.md`, following `prompts/PLAN_ENGINE.md`. Plan authoring and lifecycle rules are defined in `plan-reference.md`.
 
 ## Creation
 

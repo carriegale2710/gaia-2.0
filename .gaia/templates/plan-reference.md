@@ -1,6 +1,6 @@
 # PLAN.md Reference
 
-This reference is the single source for plan authoring and lifecycle mechanics. Task creation and execution are defined in `tasks-reference.md`; repository-specific workflow rules are in `.gaia/GAIA.md` and runtime rules are in `MEMORY_ENGINE.md` Part B.
+This reference is the single source for plan authoring and lifecycle mechanics. Task creation and execution are defined in `tasks-reference.md`; repository-specific workflow rules are in `.gaia/GAIA.md` and runtime rules are in `PLAN_ENGINE.md`.
 
 ## When to create a plan
 

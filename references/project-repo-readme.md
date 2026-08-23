@@ -22,15 +22,17 @@ GAIA Code is a Claude Code-inspired prompt system for Perplexity Spaces. It brin
 
 1. Create a new Perplexity Space.
 2. Paste the full contents of `prompts/SYSTEM_INSTRUCTIONS.md` into the Space **Instructions** field. This is the short gate/router — not the full prompt.
-3. Upload these three files as **Space Files**:
+3. Upload these five files as **Space Files**:
    - `prompts/SYSTEM_PROMPT.md` — behavior
-   - `prompts/MEMORY_ENGINE.md` — memory + planning
+   - `prompts/MEMORY_ENGINE.md` — persistent memory
+   - `prompts/PLAN_ENGINE.md` — planning and task execution
+   - `prompts/BUILTINS.md` — built-in commands
    - `prompts/TURN_ENGINE.md` — turns + context budget
 4. Set the Space model (GLM-5.2 or Claude Sonnet 5.0 Thinking recommended).
 5. _(Optional)_ Connect GitHub via Perplexity Connectors so GAIA can read and write your repositories.
 6. Done — GAIA Code is ready to use.
 
-> GAIA reads all three uploaded files on startup; skipping any one disables that engine. The website's [Get Started](https://gaiacode.pro/get-started) page mirrors these steps with copy/download buttons for each file.
+> GAIA reads all five uploaded files on startup; skipping any one disables that engine. The website's [Get Started](https://gaiacode.pro/get-started) page mirrors these steps with copy/download buttons for each file.
 
 ---
 
@@ -46,10 +48,15 @@ Pasted into the Space Instructions field. Switches GAIA on (`USE_GAIA_AGENT=1`),
 
 Identity, tool philosophy, dependency & version rules (versions are pinned from the registry's JSON API, never a stale snippet), security, and the Claude Code engineering philosophy.
 
-### `prompts/MEMORY_ENGINE.md` — memory + planning
+### `prompts/MEMORY_ENGINE.md` — persistent memory
 
 - **Persistent memory** (`MEMORY.md`) — survives auto-compaction: project structure, your standing notes, and observations GAIA records itself, including mistakes it fixed so they don't repeat. On first contact with a repo it reads `CLAUDE.md` / `AGENTS.md` and seeds memory with the project's structure and conventions.
+
+### `prompts/PLAN_ENGINE.md` — planning and task execution
+
 - **Plan engine** (`PLAN.md` + `TASKS.md`) — explore → plan → approve → execute, with checkboxes flipped per task as work lands.
+
+### `prompts/BUILTINS.md` — built-in commands
 
 ### `prompts/TURN_ENGINE.md` — turns + budget
 
