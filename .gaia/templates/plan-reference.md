@@ -1,6 +1,6 @@
 # PLAN.md Reference
 
-This reference describes how GAIA creates and manages the repository plan at `.gaia/PLAN.md`, following `prompts/MEMORY_ENGINE.md` Part B.
+This reference describes how GAIA creates and manages plans, following `/.gaia/GAIA.md` and `MEMORY_ENGINE.md` Part B.
 
 ## When to create a plan
 
@@ -8,16 +8,29 @@ Create or replace a plan for non-trivial work: a new feature, changes across mor
 
 Explore before planning. Read the relevant repository files first; do not plan changes to code that has not been inspected.
 
+## Plan lifecycle and folders
+
+Plans use lifecycle statuses and folders defined in `/.gaia/GAIA.md`:
+
+- `draft/` — draft plans awaiting review or approval.
+- `approved/` — approved plans not currently active.
+- `on-hold/` — approved plans blocked from execution.
+- `closed/` — completed plans.
+
+`active` is an execution condition, not a separate lifecycle status. The active approved plan is represented by `/.gaia/PLAN.md`; active execution state is represented by `/.gaia/TASKS.md`.
+
 ## Archive before replacement
 
-If an active `.gaia/PLAN.md` exists and a new plan is needed, archive it with its matching `.gaia/TASKS.md` under `.gaia/plans/` using the next free numbered pair:
+If an active `.gaia/PLAN.md` exists and a new plan is needed, archive it with its matching `.gaia/TASKS.md` under `.gaia/plans/` using the next free numbered pair in the appropriate lifecycle folder:
 
 ```text
-.gaia/plans/PLAN-001.md
-.gaia/plans/TASKS-001.md
+.gaia/plans/closed/PLAN-20260824-001.md
+.gaia/plans/closed/TASKS-20260824-001.md
 ```
 
 Increment the number until both destination names are free. Never overwrite plan history. For a draft that is not replacing the active plan, save it under `.gaia/plans/draft/` and leave the active plan and tasks unchanged.
+
+Closed plans use filenames in the format `PLAN-YYYYMMDD-NNN.md` and live in `/.gaia/plans/closed/`.
 
 ## Required plan contents
 
@@ -33,6 +46,17 @@ A standalone plan should include:
 - Acceptance criteria and validation evidence for each task when completion claims matter.
 
 The plan must use exact repository names, paths, branches, and relevant URLs so it remains portable.
+
+All plans use consistent YAML metadata:
+
+- `id`
+- `status`
+- dates
+- `priority`
+- `blocked_by`
+- `github_issue_refs`
+
+Every plan contains an append-only `## Lifecycle Log`. Each transition records the date, previous status, new status, and reason. An `on-hold` transition also records blocker IDs and unblocking conditions.
 
 ## Review before execution
 
