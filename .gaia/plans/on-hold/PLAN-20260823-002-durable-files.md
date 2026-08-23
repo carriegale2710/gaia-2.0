@@ -16,7 +16,7 @@
 
 ## Tasks
 
-### Task 1: Add repository instructions
+### ~~Task 1: Add repository instructions~~ Complete
 
 Files: `.gaia/GAIA.md`
 
@@ -27,7 +27,7 @@ Files: `.gaia/GAIA.md`
 5. Require stopping when the file cannot be read completely or the SHA is uncertain.
 6. Require re-reading and verifying the resulting file after every update.
 
-### Task 2: Add the persist skill
+### Task 2: Add the persist skill (On hold - Blocked)
 
 Files: `skills/persist.md`
 
@@ -40,7 +40,7 @@ Files: `skills/persist.md`
 7. Re-read the file and verify the previous content plus new entry are present.
 8. Report the commit and verification result.
 
-### Task 3: Add planning and backlog state
+### Task 3: Add planning and backlog state (Pending)
 
 Files: `.gaia/PLAN.md`, `.gaia/TASKS.md`, `.gaia/BACKLOG.md`
 
@@ -61,3 +61,7 @@ Implementation commit: `b779b39d8bb33ad67309e02438f7b95a3ce454be`.
 Reference commit: `460b3abe0ccfd6c0e08d94bd891f5df78079da85`.
 
 Current status: implementation is complete and the relevant files have been inspected, but the end-to-end append-preservation test and full acceptance-criteria review have not been completed. The plan remains partially complete and must not be treated as fully validated.
+
+- Task 1 is confirmed complete - github issue closed.
+- Task 2 is on-hold - blocked due to Github Connector limits with SHA. Test manually later on. Note added in `persist.md` that it still needs testing before use.
+- Task 3 is pending - ready for review.
