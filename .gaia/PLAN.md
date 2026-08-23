@@ -57,4 +57,7 @@ Every commit message must end with:
 
 ## Progress
 
-Completed on 2026-08-23 in commit `b779b39d8bb33ad67309e02438f7b95a3ce454be`.
+Implementation commit: `b779b39d8bb33ad67309e02438f7b95a3ce454be`.
+Reference commit: `460b3abe0ccfd6c0e08d94bd891f5df78079da85`.
+
+Current status: implementation is complete and the relevant files have been inspected, but the end-to-end append-preservation test and full acceptance-criteria review have not been completed. The plan remains partially complete and must not be treated as fully validated.
