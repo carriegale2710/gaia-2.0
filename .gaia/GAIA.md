@@ -1,121 +1,180 @@
 # GAIA Code — Repository Instructions
 
-This file holds only repository-specific conventions. General GAIA behaviour (permissions, skills, built-ins, commit/PR attribution rules) lives in the core engine files and should not be duplicated here.
+This file contains conventions specific to `carriegale2710/gaia-2.0`. General GAIA behavior, permissions, skills, built-ins, planning mechanics, memory mechanics, commit attribution, and pull-request attribution are defined by `SYSTEM_PROMPT.md`, `MEMORY_ENGINE.md`, `TURN_ENGINE.md`, and the Space instructions. Those files are authoritative and take precedence over this file.
 
-## Project Structure
+## Loading rule
 
-- Project: `carriegale2710/gaia-2.0` — GAIA Space configuration repository.
-- Current work: GAIA architecture design; target product repository not yet provided.
-- GAIA runtime state: sandbox `MEMORY.md`, `PLAN.md`, `TASKS.md`.
-- Durable project state: repository `/.gaia/` on `dev`.
-- Skills live in Space files and are callable as slash commands.
+Read this file when working in `carriegale2710/gaia-2.0`, or when inspecting or changing `/.gaia/`, `/.agents/`, `AGENTS.md`, `CLAUDE.md`, plans, tasks, or repository workflow.
 
-## Branch model
+Load the core engine files first. Use this file only for repository-specific conventions and decisions. If this file conflicts with a core engine file, follow the core engine file and report the conflict.
 
-- GAIA always starts work from `dev`.
-- If `dev` is missing, create it automatically from the repository default branch.
-- Feature, fix, and chore branches must branch from `dev`.
-- Never work directly on `main`.
-- Pull requests target `dev` by default.
-- `main` receives release-ready changes from `dev`.
+## Repository identity
 
-## Repository agent files
+- Repository: `carriegale2710/gaia-2.0`.
+- Purpose: GAIA Space configuration and architecture work.
+- Product repository: not yet provided.
+- Repository durable state: `/.gaia/`.
+- Default integration branch: `dev`.
+- Runtime state: sandbox `MEMORY.md`, `PLAN.md`, and `TASKS.md`.
+- Skills: Space-file Markdown documents callable as slash commands.
 
-- Keep `/.gaia/`, `/.agents/`, root `AGENTS.md`, and root `CLAUDE.md` on `dev` and its descendants, not `main`.
-- Keep `/.gaia/` separate from `/.agents/`.
-- Root `AGENTS.md` is the canonical general agent guidance.
-- Root `CLAUDE.md` is a compatibility shim pointing to `AGENTS.md`.
-- This file (`/.gaia/GAIA.md`) contains GAIA-specific operational rules for this repository.
-- `/.gaia/plans/README.md` provides navigation and format guidance only.
+Discovery is complete when the repository identity, default branch, integration branch, durable-state directory, and available agent instruction files have been recorded.
+
+## Branch convention
+
+For repository changes, use `dev` as the default base branch and target pull requests to `dev`.
+
+| Change type | Base branch                               | Pull-request target |
+| ----------- | ----------------------------------------- | ------------------- |
+| Feature     | `dev`                                     | `dev`               |
+| Fix         | `dev`                                     | `dev`               |
+| Chore       | `dev`                                     | `dev`               |
+| Release     | Ask before departing from this convention | Confirm explicitly  |
+| Hotfix      | Ask before departing from this convention | Confirm explicitly  |
+
+Read-only inspection may use the branch required to answer the user's request. If the user specifies another base branch, follow that instruction unless it conflicts with a higher-priority engine rule.
+
+### Branch discovery
+
+1. Read the repository branch list and identify the default branch.
+2. Check whether `dev` exists.
+3. If `dev` is absent, report that it is missing and propose creating it from the repository default branch.
+4. Create `dev` only under the active permission mode and applicable approval gate.
+5. Create feature, fix, and chore branches from `dev`.
+
+Branch discovery is complete when the selected base branch, default branch, and any required branch creation or approval state are known.
+
+## Agent-file layout
+
+The repository uses the following ownership model:
+
+| Path                     | Role                                           | Expected branch scope |
+| ------------------------ | ---------------------------------------------- | --------------------- |
+| `/.gaia/`                | GAIA-specific durable state and workflow files | `dev` and descendants |
+| `/.agents/`              | Repository agent guidance                      | `dev` and descendants |
+| `/AGENTS.md`             | Canonical general agent guidance               | `dev` and descendants |
+| `/CLAUDE.md`             | Compatibility pointer to `AGENTS.md`           | `dev` and descendants |
+| `/.gaia/GAIA.md`         | GAIA-specific repository conventions           | `dev` and descendants |
+| `/.gaia/plans/README.md` | Plan-folder navigation and format guidance     | `dev` and descendants |
+
+`AGENTS.md` is the canonical general repository guidance. `CLAUDE.md` points to it for compatibility. `GAIA.md` supplies only GAIA-specific operational conventions.
+
+Treat copies of these files on `main` as repository drift. Report the drift during discovery. Do not remove or rewrite files on `main` unless the user explicitly requests that cleanup.
+
+The agent-file layout is verified when each listed path has been classified as present, absent, or unexpected, with the relevant branch recorded.
 
 ## Durable state
 
-- Durable project state lives in `/.gaia/` on the `dev` branch.
-- Required durable files:
-  - `/.gaia/MEMORY.md`
-  - `/.gaia/PLAN.md`
-  - `/.gaia/TASKS.md`
-- When connected to a GitHub repository:
-  - Check for the `/.gaia/` folder and existing durable files on `dev`.
-  - If the folder or files do not exist, confirm with the user, then create them.
-- Synchronize sandbox state (`MEMORY.md`, `PLAN.md`, `TASKS.md` in the chat) with durable `/.gaia/` state when first connected via the GitHub connector.
-- Memory updates must always append to the latest existing file; never overwrite prior content unless explicitly importing memory.
-- When `/handoff` is called, ask the user if they want the latest sandbox files appended to the repository durable files before executing the skill.
+Required repository files:
+
+- `/.gaia/MEMORY.md` — durable project knowledge and decisions.
+- `/.gaia/PLAN.md` — active approved plan, when one exists.
+- `/.gaia/TASKS.md` — execution mirror for the active plan, when one exists.
+
+Sandbox files with the same names are runtime state. They are not automatically interchangeable with repository files.
+
+### First GitHub connection
+
+1. Inspect `/.gaia/` on `dev`.
+2. Read each existing durable file and record missing files.
+3. Read the sandbox `MEMORY.md`, `PLAN.md`, and `TASKS.md` when present.
+4. Compare repository and sandbox state without silently merging differences.
+5. If only one side contains a file, report the difference and propose copying it to the other side.
+6. If both sides differ, present the conflicting sections and ask which source is authoritative.
+7. Apply synchronization only after the source, destination, files, and intended changes are clear.
+8. Follow the active permission mode and engine approval rules for every repository write.
+
+Synchronization is complete when the source of truth is identified for each differing file, the proposed or completed destinations are recorded, and no unresolved conflict remains hidden.
+
+### Memory updates
+
+- Append durable memory to the latest existing repository memory file; preserve prior entries.
+- Do not overwrite repository memory unless the user explicitly requests an import or replacement.
+- Follow `MEMORY_ENGINE.md` for sandbox memory structure, compaction, import, export, and permission-mode behavior.
 
 ## Plan lifecycle
 
-- One general template: `/.gaia/templates/PLAN.md`.
-- Do not create separate templates for plan states.
-- Plan folders:
-  - `draft/`
-  - `approved/`
-  - `on-hold/`
-  - `closed/`
-- Draft plans need review or approval; they create no Issues, branches, or product-code changes.
-- Approved plans may coexist; GAIA executes only one plan at a time.
-- Approved executable plans belong in `approved/`.
-- Blocked approved plans belong in `on-hold/`.
-- Active plan uses `/.gaia/PLAN.md`; active tasks use `/.gaia/TASKS.md`.
-- Closed plans belong in `/.gaia/plans/closed/` with filenames `PLAN-YYYYMMDD-NNN.md`.
-- Do not archive `TASKS-*.md` files; GitHub Issues provide durable task records.
-- Plans use consistent YAML metadata:
-  - `id`
-  - `status`
-  - dates
-  - `priority`
-  - `blocked_by`
-  - `github_issue_refs`
-- Plans include an append-only `## Lifecycle Log`.
-  - Every transition records: date, previous status, new status, and reason.
-  - `on-hold` requires blocker IDs and explanation.
-- Plan state expectations:
-  - Draft: context, options, and open questions.
-  - Approved: implementation-ready.
-  - On-hold: blockers and unblocking conditions.
-  - Active: Issues and validation.
-  - Closed: outcome, Issue mapping, and decisions.
+Lifecycle statuses are:
 
-## Plan execution and GitHub Issues
+- `draft` — context, options, and open questions; not executable.
+- `approved` — implementation-ready and eligible for activation.
+- `on-hold` — approved but blocked; blocker IDs and unblocking conditions are required.
+- `closed` — completed or deliberately ended, with outcome and task mapping.
 
-- Approved plan tasks create GitHub Issues when the plan activates.
-- `TASKS.md` is a temporary execution mirror.
-- Before closing a plan, every task needs an Issue reference.
-- Issue completion state must match task completion state.
-- Record Issue mappings in the closed plan.
-- Inspect existing repository labels first; reuse clearly established labels.
-- If labels are absent or unclear, create minimal labels:
-  - `plan`
-  - `task`
-  - `bug`
-  - `research`
-  - `design`
-  - `marketing`
+`active` is an execution condition, not a separate lifecycle status. The active approved plan is represented by `/.gaia/PLAN.md`; active execution state is represented by `/.gaia/TASKS.md`.
 
-## Stale plans and informal work
+Plan folders:
 
-- Detect stale plans, summarize them, and ask the user before acting.
-- Follow the user's explicit choice for retaining, archiving, or discarding full plans.
-- Permanent deletion is never the default.
-- Keep `BACKLOG.md` as a lightweight file for informal tasks not ready for formal plans.
-- `BACKLOG.md` is separate from formal plan execution and GitHub Issue records.
+- `draft/` — draft plans awaiting review or approval.
+- `approved/` — approved plans not currently active.
+- `on-hold/` — approved plans blocked from execution.
+- `closed/` — completed plans.
 
-## Superseded decisions
+Closed plans use filenames in the format `PLAN-YYYYMMDD-NNN.md` and live in `/.gaia/plans/closed/`.
 
-- `PLAN-001.md` naming is superseded by `PLAN-YYYYMMDD-NNN.md`.
-- Archiving `TASKS-*.md` is superseded; archive plans only.
-- Sandbox-only state is superseded by sandbox runtime state plus durable `/.gaia/` state.
-- A single generic plans archive is superseded by lifecycle folders.
-- Separate templates per lifecycle state are superseded by one shared template.
-- Plan rules in `plans/README.md` as authority are superseded by `/.gaia/GAIA.md`.
-- Asking before creating `dev` is superseded by automatic creation.
-- Read-only, Issues-as-source, and bidirectional alternatives are superseded by the approved Tasks-to-Issues workflow.
+All plans use consistent YAML metadata:
 
-## User preferences (context)
+- `id`
+- `status`
+- dates
+- `priority`
+- `blocked_by`
+- `github_issue_refs`
 
-- Solo founder, Melbourne, Australia; ADHD; short sprints; multiple projects.
-- Prefers dense, concise bullets; avoids verbose prose.
-- Default skills to load on each new session: `/caveman`, `/ponytail`.
-- Typical SaaS stack: Next.js, TypeScript, Tailwind, Supabase, Vercel, Stripe/Lemon Squeezy.
-- GAIA handles specification, tickets, and pull-request review.
-- Remind the user to export memory before ending sessions.
-- New threads begin by importing attached memory.
+Every plan contains an append-only `## Lifecycle Log`. Each transition records the date, previous status, new status, and reason. An `on-hold` transition also records blocker IDs and unblocking conditions.
+
+## Plan activation and Issues
+
+A plan activates only after explicit approval and placement in `approved/`.
+
+When an approved plan activates:
+
+1. Read the plan and inspect existing GitHub Issues.
+2. Match each plan task to an existing equivalent open Issue where one exists.
+3. Create one Issue for each approved task that lacks an equivalent Issue.
+4. Reuse established repository labels after inspecting the label set.
+5. If labels are absent or unclear, use only the minimal labels needed from: `plan`, `task`, `bug`, `research`, `design`, and `marketing`.
+6. Record every task-to-Issue mapping in the plan and the execution mirror.
+7. Start implementation only after the mapping and `TASKS.md` are complete.
+
+Activation is complete when every approved task has exactly one recorded Issue reference or an explicit documented exception, and `TASKS.md` reflects the approved task list.
+
+Issue completion state must match task completion state. Before closing a plan, record the final Issue mapping and outcome in the closed plan.
+
+## Informal work and stale plans
+
+Use `BACKLOG.md` for informal tasks that are not ready for a formal plan. Keep it separate from formal plan execution and GitHub Issue records.
+
+When a plan appears stale:
+
+1. Identify the plan, status, age, and evidence of staleness.
+2. Summarize the consequences of retaining, archiving, or discarding it.
+3. Ask the user which action to take.
+4. Follow the user's choice.
+5. Preserve the plan unless the user explicitly chooses archival or deletion.
+
+Stale-plan handling is complete when the user's decision and resulting file state are recorded.
+
+## Repository decisions
+
+The following older decisions are no longer active:
+
+- `PLAN-001.md` naming is replaced by `PLAN-YYYYMMDD-NNN.md`.
+- Plan archives use lifecycle folders rather than one undifferentiated archive.
+- One shared plan template is used instead of separate templates for each lifecycle state.
+- `/.gaia/GAIA.md` is authoritative for repository plan rules; `plans/README.md` provides navigation and format guidance only.
+- The approved Tasks-to-Issues workflow replaces read-only, Issues-as-source, and bidirectional alternatives.
+- Repository durable state uses `/.gaia/` alongside sandbox runtime state.
+
+Do not revive a superseded convention unless the user explicitly requests a change to the current repository model.
+
+## Completion standard
+
+Repository-work instructions in this file are complete only when the agent can identify:
+
+- the repository and branch to use;
+- the applicable agent instruction files and their precedence;
+- the location and state of durable files;
+- the plan lifecycle and activation condition;
+- the task-to-Issue mapping state;
+- any unresolved drift, conflict, or approval requirement.
