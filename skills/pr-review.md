@@ -1,44 +1,47 @@
 ---
 name: pr-review
-description: |
-  Review a GitHub pull request: read the full diff, analyze it against GAIA's
-  engineering standards, and post the findings as a PR review via GitHub MCP.
+description: >
+  Review pull requests and code diffs when the user says "review this PR", "review this code", 
+  "critique this", or asks for feedback on a diff, patch, or merge request.
 ---
 
-# PR Review: review a pull request
+## Role
 
-When the user runs `/pr-review <ref>` — where `<ref>` is `owner/repo#123`, a full
-PR URL, or just `#123` when the repo is already known from this conversation —
-review that pull request end to end.
+You review code changes — PRs, diffs, patches — and provide actionable feedback.
 
-## Steps
+## When to use
 
-1. **Resolve the PR.** Parse owner, repo, and PR number from the argument. If you
-   cannot, ask for them (one question, then stop until answered).
-2. **Read it.** `pull_request_read` with method `get` (title, body, base/head
-   branches), then `get_diff` and `get_files`. Respect the `TURN_ENGINE.md` §2
-   context budget — for large PRs, page through the diff and read the
-   most-changed files first. Review **every** commit's changes, not just the
-   latest.
-3. **Analyze** against `SYSTEM_PROMPT.md` PART IV, in this order: correctness
-   bugs (logic errors, type mismatches, off-by-one, unhandled error paths), then
-   security (injection, unsanitized output, hardcoded secrets), then scope
-   (unrelated changes, dead code, speculative abstractions). Note genuine
-   strengths too — this is an honest review, not a nitpick list.
-4. **Report to the user first**: a short verdict, each issue with `file:line`,
-   and anything you would block on.
-5. **Post the review** (writes — `_requires_user_approval` follows the active
-   permission mode, `TURN_ENGINE.md` §7):
-   - `pull_request_review_write` method `create` to open a pending review,
-   - `add_comment_to_pending_review` for each line-anchored finding,
-   - `pull_request_review_write` method `submit_pending` with event `COMMENT`.
+- User says "review this PR", "review this code", "critique this"
+- User shares a diff, patch, or merge request
+- User asks "is this good?" or "what's wrong with this?"
 
-   Submit as **`COMMENT` only** — never `APPROVE` or `REQUEST_CHANGES` unless the
-   user explicitly asks for that event.
+## Process
 
-## Notes
+1. **Read the full diff** — every commit, every file changed
 
-- If the user only wants the analysis ("review but don't post"), stop after
-  step 4.
-- Never include code suggestions you have not verified against the actual file
-  contents from the diff.
+2. **Check against requirements**:
+   - Does it do what the user asked?
+   - Are there unrequested changes (scope creep)?
+   - Are there obvious bugs, security issues, or regressions?
+
+3. **Apply `/ponytail` lens**:
+   - Is it overcomplicated?
+   - Could it be simpler (standard library, native feature, one-liner)?
+   - Are there unnecessary abstractions or dependencies?
+
+4. **Prioritize feedback**:
+   - **Blockers** — bugs, security issues, broken requirements
+   - **Suggestions** — simplifications, cleanups, optional improvements
+   - **Nits** — style, naming, minor issues (mention only if pattern-wide)
+
+## Output
+
+- One-paragraph summary (what the PR does)
+- Bulleted feedback, grouped by severity (blockers → suggestions → nits)
+- Clear recommendation: approve, approve with changes, or request rework
+
+## Boundaries
+
+- Do not rewrite the PR — give feedback, let the author decide
+- Do not nitpick unnecessarily — focus on what changes behaviour or quality
+- Do not assume context — ask if the PR's goal is unclear

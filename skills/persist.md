@@ -1,43 +1,44 @@
 ---
 name: persist
-description: Safely append a concise entry to the repository's durable memory file.
-disable-model-invocation: true
+description: >
+  Persist knowledge to MEMORY.md when the user says "save", "remember", "add to memory", 
+  "keep this for later", or after capture.md has extracted insights ready to write.
+  Distinct from capture: persist = write to file; capture = extract from conversation.
 ---
 
-# Persist
+## Role
 
-Use this skill only when the user asks to persist, append, or save project memory in the repository.
+You write knowledge to `MEMORY.md` — the durable state file that survives auto-compaction.
 
-> Note: this skill is a work in progress and needs testing before use; track validation work in `.gaia/BACKLOG.md`.
+## When to use
 
-## Inputs
+- User says "save", "remember", "add to memory", "keep this for later"
+- User approves captured insights from `capture.md`
+- You've made a meaningful edit, discovered a gotcha, or answered a codebase question worth remembering
 
-Resolve these before any write:
+## Process
 
-- Repository owner and name.
-- Branch, defaulting to `dev` for this project unless the user explicitly names another branch.
-- Target path, defaulting to `.gaia/MEMORY.md`.
-- The exact new memory entry.
+1. **Read MEMORY.md** (create via template if missing — see `prompts/MEMORY_ENGINE.md` A.2)
 
-## Safe procedure
+2. **Choose the section**:
+   - `## Project Structure` — repo layout, key files, gotchas
+   - `## Notes` — user's standing instructions ("use pnpm, not npm")
+   - `## Memories` — observations, decisions, lessons learned (the main destination)
 
-1. Read the complete target file from the resolved branch with GitHub MCP.
-2. Capture the exact current blob SHA returned for that file.
-3. Confirm the target is the expected file and that its contents are complete.
-4. Insert one concise entry into the appropriate existing section, preserving all other content byte-for-byte.
-5. Do not reconstruct the file from summaries, excerpts, prior context, or a remembered template.
-6. If the file is missing, truncated, ambiguous, or its SHA is unavailable, stop and ask the user.
-7. Before writing, request confirmation showing the exact repository, branch, path, entry, and resulting complete content or a clear diff.
-8. Update the file using the captured SHA and a commit message ending with the exact trailer:
+3. **Append or update**:
+   - Use `append_to_section()` helper from `MEMORY_ENGINE.md` A.4
+   - Do not duplicate — if a bullet already exists, update it instead
+   - Keep entries short and specific (one line per bullet)
 
-   `Co-Authored-By: GAIA Code <noreply@gaiacode.pro>`
+4. **Compact if needed** — if `## Memories` passes ~40 bullets, consolidate in the same turn (merge duplicates, drop stale entries, keep every mistake-lesson rule)
 
-9. Re-read the same file from the same branch after the write.
-10. Verify that the previous complete content remains present and the new entry appears exactly once.
-11. Report the commit SHA, file SHA, branch, and verification result.
+## Output
 
-## Failure handling
+- Confirm what was written (one sentence)
+- Optionally show the new bullet(s)
 
-- If the update reports a SHA conflict, re-read the file and start again with the new SHA.
-- If post-write verification fails, do not overwrite or retry blindly; report the discrepancy and ask for direction.
-- Never delete or replace existing memory to make an append easier.
+## Boundaries
+
+- Do not capture — that's `capture.md`'s job. If the user gives raw conversation, call `capture.md` first.
+- Do not write to `PLAN.md` or `TASKS.md` — those are plan-engine files (`prompts/PLAN_ENGINE.md`)
+- Do not export — that's a separate command ("export memory")
