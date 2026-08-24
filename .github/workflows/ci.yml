@@ -1,0 +1,74 @@
+name: Prompt validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - dev
+
+permissions:
+  contents: read
+
+jobs:
+  prompt-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate prompt refactor
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          root = Path('.')
+          core = root / 'prompts' / 'SYSTEM_PROMPT.md'
+          instructions = root / 'prompts' / 'SYSTEM_INSTRUCTIONS.md'
+          turn = root / 'prompts' / 'TURN_ENGINE.md'
+          plan = root / 'prompts' / 'PLAN_ENGINE.md'
+          builtins = root / 'prompts' / 'BUILTINS.md'
+
+          required_files = [core, instructions, turn, plan, builtins]
+          missing_files = [str(path) for path in required_files if not path.is_file()]
+          if missing_files:
+              raise SystemExit(f'Missing prompt files: {", ".join(missing_files)}')
+
+          core_text = core.read_text(encoding='utf-8')
+          checks = {
+              'core prompt under 8 KB': len(core.read_bytes()) < 8192,
+              'GAIA Code identity': 'GAIA Code' in core_text,
+              'verification gate': 'Verify before you answer' in core_text,
+              'read-before-code gate': 'Read first, code second' in core_text,
+              'unread-code gate': 'Never propose changes to code you have not read' in core_text,
+              'memory engine pointer': 'prompts/MEMORY_ENGINE.md' in core_text,
+              'turn engine pointer': 'prompts/TURN_ENGINE.md' in core_text,
+              'plan engine pointer': 'prompts/PLAN_ENGINE.md' in core_text,
+              'built-ins pointer': 'prompts/BUILTINS.md' in core_text,
+              'model footer': 'Running GAIA Code 3.4 in Perplexity using [model]' in core_text,
+          }
+
+          reference_checks = {
+              'security rules': ('parameterized queries' in instructions.read_text(encoding='utf-8') and 'shell-injection' in instructions.read_text(encoding='utf-8')),
+              'dependency rules': 'registry JSON API' in instructions.read_text(encoding='utf-8'),
+              'GitHub safety rules': 'Never commit, push, or merge unless the user explicitly asks' in instructions.read_text(encoding='utf-8'),
+              'commit attribution': 'Co-Authored-By: GAIA Code <noreply@gaiacode.pro>' in instructions.read_text(encoding='utf-8'),
+              'PR attribution': '🌱 Generated with [GAIA Code](https://gaiacode.pro)' in instructions.read_text(encoding='utf-8'),
+              'turn budget': '15 tool calls' in turn.read_text(encoding='utf-8'),
+              'permission modes': 'Ask Permissions' in turn.read_text(encoding='utf-8') and 'Bypass Permissions' in turn.read_text(encoding='utf-8'),
+              'write metadata': '_tool_input_summary' in turn.read_text(encoding='utf-8'),
+              'planning workflow': 'wait for explicit user approval' in plan.read_text(encoding='utf-8'),
+              'built-in commands': all(command in builtins.read_text(encoding='utf-8') for command in ('/status', '/help', '/ask-permissions', '/accept-edits', '/dangerously-skip-permissions')),
+          }
+
+          checks.update(reference_checks)
+          failures = [name for name, passed in checks.items() if not passed]
+          if failures:
+              raise SystemExit('Prompt validation failed: ' + ', '.join(failures))
+
+          print(f'Prompt validation passed ({len(checks)} checks); core size: {len(core.read_bytes())} bytes')
+          PY
