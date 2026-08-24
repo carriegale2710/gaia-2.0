@@ -34,18 +34,59 @@ Complete when the user replies `yes`, `save`, or `looks good`. Any other reply �
 
 ### 4. Write MEMORY.md — Sessions section
 
-Append a dated capture block to `## Memories` using the template in `capture-reference.md`.
+Append this dated capture block to `## Memories`:
+
+```markdown
+### Session — YYYY-MM-DD HH:MM
+
+**Decisions made**
+
+- [project] decision text
+
+**Pending decisions**
+
+- [ ] unresolved choice
+
+**Follow-up questions**
+
+- [ ] question to answer
+
+**Unfinished requests**
+
+- [ ] explicit request not completed
+
+**Progress**
+
+- artifact or milestone
+
+**Blockers**
+
+- [BLOCKED] blocker / None
+```
+
 Append only — never overwrite.
 
 ### 5. Write PLAN.md and TASKS.md (only if a formal plan was discussed)
 
-If a feature, strategy, or multi-step work was explicitly planned and approved → write both files using the templates in `capture-reference.md`. Archive any existing files first (archive code in `capture-reference.md`).
+If a feature, strategy, or multi-step work was explicitly planned and approved → write both files using the templates in `plan-reference.md` and `tasks-reference.md`. Archive any existing files first according to those references.
 
 Complete when both files exist on disk and match the discussed plan. Skip entirely if no formal plan — note "No plan this session."
 
 ### 6. Update BACKLOG.md (if informal tasks exist but no formal plan)
 
-If tasks or to-dos were discussed without a formal plan → append them to `BACKLOG.md` under `## Backlog` using the template in `capture-reference.md`. Create the file if missing.
+If tasks or to-dos were discussed without a formal plan → append them to `BACKLOG.md` under `## Backlog` using this template. Create the file if missing.
+
+```markdown
+# BACKLOG.md
+
+## Backlog
+
+- [ ] task — [project] — YYYY-MM-DD
+
+## Done
+
+- [x] completed task — [project] — YYYY-MM-DD
+```
 
 ### 7. Surface all open items
 
