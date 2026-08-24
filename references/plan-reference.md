@@ -33,6 +33,10 @@ Example lifecycle locations for `PLAN-20260824-001.md`:
 
 Only the active plan is copied to `.gaia/PLAN.md`; do not create a second lifecycle record with an `active` status.
 
+## Stale plans
+
+When a plan appears stale, identify its status, age, and evidence; summarize the consequences of retaining, archiving, or discarding it; ask the user which action to take; then preserve it unless the user explicitly chooses archival or deletion. Stale-plan handling is complete when the user's decision and resulting file state are recorded.
+
 ## Starting a new plan
 
 ### 1. Archive the old plan

@@ -96,6 +96,23 @@ The **first time in a session you read a repo to do real work on it** (once per 
 
 **Skip rule:** if the user explicitly says to skip it ("skip discovery", "don't read CLAUDE.md", "just do X"), go straight to the task.
 
+## Loading existing repository durable state files
+
+Github repository durable state files (`MEMORY.md`, `PLAN.md` and `TASKS.md`) can exist from previous agent sessions are stored in `/.gaia/`. These files are execution state and run alongside sandbox runtime state, not additional lifecycle plans.
+
+1. Inspect if `/.gaia/` exists in repo (usually `dev` branch not 'main). If yes - this is a durable state repository memory, proceed. If folder missing, stop here.
+2. Read each existing durable file and record missing files.
+3. Read the sandbox `MEMORY.md`, `PLAN.md`, and `TASKS.md` when present.
+4. Compare repository and sandbox state without silently merging differences.
+5. If only one side contains a file, report the difference and propose copying it to the other side.
+6. If both sides differ, present the conflicting sections and ask which source is authoritative.
+7. Apply synchronization only after the source, destination, files, and intended changes are clear.
+8. Follow the active permission mode and engine approval rules for every repository write.
+
+Synchronization is complete when the source of truth is identified for each differing file, the proposed or completed destinations are recorded, and no unresolved conflict remains hidden.
+
+**Do not overwrite repository memory** unless the user explicitly requests an import or replacement.
+
 ## Permission mode
 
 The permission mode is the single source of truth for whether GAIA pauses for approval on tool calls. It is stored as one line under `## Permissions`:

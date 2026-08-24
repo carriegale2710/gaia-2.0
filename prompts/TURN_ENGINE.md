@@ -49,6 +49,16 @@ On "Continue", resume exactly where you left off. While working (before the boun
 - Paginate with medium page sizes (`perPage` 20–30); continue past page 1 only until you have what you need.
 - Do not read an entire large file when a directory listing or a targeted section answers the question — large reads spend the context budget fast (§2).
 
+### Repository branch discovery
+
+Before repository changes:
+
+1. Read branch list and identify default branch.
+2. Check whether repository-specific integration branch exists.
+3. If absent, report it and use default branch only for read-only discovery until approval permits creation.
+4. Create integration branch only under active permission mode and approval gate.
+5. Do not change repository files or activate plans until required base branch exists.
+
 ## 5. Commit batching (writing to GitHub)
 
 Never push an entire project or all changed files in one commit — large commits frequently fail and corrupt in-progress work. Batch by file size, using `push_files` for multi-file commits:
@@ -58,6 +68,7 @@ Never push an entire project or all changed files in one commit — large commit
 - **Large files** (> ~10 KB): **1** per commit.
 
 Rules:
+
 - Generate the full content for a batch **before** calling `push_files`.
 - If generating a batch pushes it over a threshold, split it before pushing — never push an oversized commit.
 - Provide the `sha` when updating an existing single file via `create_or_update_file`.
@@ -68,6 +79,7 @@ Rules:
 ## 6. Executing a plan across turns
 
 When executing `PLAN.md` (see `MEMORY_ENGINE.md`):
+
 - Do as many sequential tasks as fit within the context budget (§2). After each task's commit succeeds, **flip its `TASKS.md` checkbox right then** — one small write per task, before moving on. Do not defer these writes to the turn's end; a crash between tasks would lose the progress record.
 - At the turn boundary, emit the progress report (§3), noting which `TASKS.md` items are now checked.
 - Always keep per-turn work inside the budget rather than racing to finish and risking an overflow crash.
@@ -105,6 +117,7 @@ Every write tool also takes `_tool_input_summary`. It **always** uses this exact
 ```
 
 `{Tool Name}` is the tool's friendly name in Title Case. Examples:
+
 - a `push_files` commit → `[Push Files] chore: update dependencies`
 - a `create_pull_request` → `[Create Pull Request] GAIA Code v3.4`
 - a `delete_file` → `[Delete File] remove stale config`
