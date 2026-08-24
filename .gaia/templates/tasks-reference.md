@@ -8,7 +8,9 @@ Create `.gaia/TASKS.md` before GitHub Issue creation: only after the plan is app
 
 Example:
 
-```markdown
+```python
+tasks = """# TASKS.md
+
 # TASKS.md
 
 - [ ] Task 1: Add repository instructions
@@ -23,6 +25,10 @@ Example:
   - Issue: pending
   - status: planned
   - validation: pending
+
+"""
+with open('TASKS.md', 'w') as f:
+    f.write(tasks)
 ```
 
 After one GitHub Issue has been matched or created for every task, replace each `Issue: pending` value with its Issue reference:
@@ -93,7 +99,7 @@ When all tasks are complete, check every item and record the validation result, 
 
 ## Update timing
 
-Check an item off immediately after that task’s commit or push succeeds and validation is complete, before beginning the next task. Never defer all checkbox updates until the end of a turn. Never check an item whose work is partial or whose validation is failing.
+Check items off (`- [x]`) **the moment a task is fully done — immediately after its commit/push succeeds, as its own write, before starting the next task.** Never batch all the checkboxes into one write: that is precisely the state a mid-turn crash or auto-compaction destroys, which defeats the file's purpose. Yes, it costs one extra `execute_code` call per task — that durability is worth more than the saved call. Never check an item whose work is partial or whose checks are failing.
 
 ## Progress across turns
 
