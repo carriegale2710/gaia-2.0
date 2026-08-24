@@ -58,16 +58,3 @@ Sandbox files with the same names are runtime state. They are not automatically 
 ## Informal work and stale plans
 
 Use `BACKLOG.md` for informal tasks that are not ready for a formal plan. Keep it separate from formal plan execution and GitHub Issue records.
-
-## Repository decisions
-
-The following older decisions are no longer active:
-
-- `PLAN-001.md` naming is replaced by `PLAN-YYYYMMDD-NNN.md`.
-- Plan archives use lifecycle folders rather than one undifferentiated archive.
-- One shared plan template is used instead of separate templates for each lifecycle state.
-- `.gaia/templates/plan-reference.md` is authoritative for plan mechanics; `/.gaia/GAIA.md` provides repository-specific workflow and state rules.
-- The approved Tasks-to-Issues workflow replaces read-only, Issues-as-source, and bidirectional alternatives.
-- Repository durable state uses `/.gaia/` alongside sandbox runtime state.
-
-Do not revive a superseded convention unless the user explicitly requests a change to the current repository model.
