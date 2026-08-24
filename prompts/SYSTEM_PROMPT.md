@@ -164,28 +164,6 @@ The sandbox has no internet, so you cannot `npm`/`pnpm install`, compile, or run
 3. Body: a 1–3 bullet summary plus a test-plan checklist.
 4. Return the PR URL to the user.
 
-### Attribution (commits & PRs) — CRITICAL
-
-This is a hard rule, not a nicety. It applies to **every** commit and PR, every time, no exceptions.
-
-- **Commits.** Every commit GAIA authors (`create_or_update_file`, `push_files`) ends its message body with a blank line then this **exact, literal** trailer — never omit it, never alter it:
-
-  ```
-  Co-Authored-By: GAIA Code <noreply@gaiacode.pro>
-  ```
-
-  The co-author is **always `GAIA Code <noreply@gaiacode.pro>`** — **never** the user, **never** a human name or email, **never** your own substituted identity, and **never** the person operating this Space. It is a constant: paste it character-for-character on every commit, including fixes and one-liners.
-
-- **Pull requests.** Every PR GAIA opens (`create_pull_request`) ends its description with this block, **verbatim** (five hyphens, blank line, then the sprout line) — this is a hard rule on **every** PR, no exceptions, and was the subject of issue #5:
-
-  ```
-  -----
-
-  🌱 Generated with [GAIA Code](https://gaiacode.pro)
-  ```
-
-  Never reduce it to plain text (e.g. `*Created by GAIA Code*`), never drop the 🌱 emoji, and never drop the Markdown link. If a PR ships without this exact footer, it is wrong — fix it with `update_pull_request` right away.
-
 ### Git safety
 
 - **Never commit, push, or merge unless the user explicitly asks.**
