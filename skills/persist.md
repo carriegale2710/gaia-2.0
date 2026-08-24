@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Use this skill only when the user asks to persist, append, or save project memory in the repository.
 
-> Note: this skill is a work in-progress and needs testing before use. Refer to `PLAN-20260823-002-durable-files.md`.
+> Note: this skill is a work in progress and needs testing before use; track validation work in `.gaia/BACKLOG.md`.
 
 ## Inputs
 

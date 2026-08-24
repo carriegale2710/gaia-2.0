@@ -6,58 +6,44 @@
 
 ---
 
-## 1. Current Architecture Constraints
-
-GAIA Code (v3.x) is a single-context, sequential prompt system. Key structural facts from the source repo:
-
-- **One LLM, one context window** — everything (MEMORY_ENGINE, TURN_ENGINE, SYSTEM_PROMPT, user message, tool outputs) competes inside one token budget.
-- **15 tool calls per turn** — the per-message cap raised in `SYSTEM_INSTRUCTIONS.md`. Independent calls *can* be batched, but `TURN_ENGINE.md §1` says "go sequential when one call's output feeds the next."
-- **`TASKS.md` is a single ordered checklist** — tasks execute one at a time across turns; no fan-out or parallel task lanes.
-- **No subagents, no worktrees** — explicitly removed in the v3 overhaul (`research/OVERHAUL.md`): "There are no subagents in GAIA Code."
-- **Context budget ceiling: ~40,000 tokens (~160 KB) per turn** — `TURN_ENGINE.md §2`. This is the hard practical constraint that prevents long parallel reads.
-
-These constraints are deliberate: Perplexity Spaces offers a single conversation thread with no subprocess spawning, no shared state bus, and no native multi-agent routing. Parallelism cannot be implemented at the infrastructure layer — it must be prompt-engineered.
-
----
-
-## 2. Why Parallelism Matters
+## 1. Why Parallelism Matters
 
 Current industry research (2025–2026) identifies four concrete benefits of parallel agentic execution:
 
-| Benefit | Finding | Source |
-|---|---|---|
-| **Latency reduction** | Total latency approaches the longest single step, not the sum of all steps | [gurusup.com — Multi-Agent Orchestration Guide](https://gurusup.com/blog/multi-agent-orchestration-guide) |
-| **Quality improvement** | Specialized parallel agent teams outperform single monolithic models by 30–60% on complex multi-step tasks | [dev.to — Multi-Agent AI Systems Practical Guide](https://dev.to/aiwave/multi-agent-ai-systems-a-practical-guide-to-orchestrating-llms-for-complex-workflows-3geh) |
-| **Context window preservation** | Accuracy degrades when context utilization exceeds 60–70%; splitting work across agents keeps windows fresh | [gurusup.com — Multi-Agent Orchestration Guide](https://gurusup.com/blog/multi-agent-orchestration-guide) |
-| **Error isolation** | Errors in one sub-task don't compound into unrelated steps — a leading failure mode in sequential pipelines | [redis.io — Why Multi-Agent LLM Systems Fail](https://redis.io/blog/why-multi-agent-llm-systems-fail/) |
+| Benefit                         | Finding                                                                                                     | Source                                                                                                                                                             |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Latency reduction**           | Total latency approaches the longest single step, not the sum of all steps                                  | [gurusup.com — Multi-Agent Orchestration Guide](https://gurusup.com/blog/multi-agent-orchestration-guide)                                                          |
+| **Quality improvement**         | Specialized parallel agent teams outperform single monolithic models by 30–60% on complex multi-step tasks  | [dev.to — Multi-Agent AI Systems Practical Guide](https://dev.to/aiwave/multi-agent-ai-systems-a-practical-guide-to-orchestrating-llms-for-complex-workflows-3geh) |
+| **Context window preservation** | Accuracy degrades when context utilization exceeds 60–70%; splitting work across agents keeps windows fresh | [gurusup.com — Multi-Agent Orchestration Guide](https://gurusup.com/blog/multi-agent-orchestration-guide)                                                          |
+| **Error isolation**             | Errors in one sub-task don't compound into unrelated steps — a leading failure mode in sequential pipelines | [redis.io — Why Multi-Agent LLM Systems Fail](https://redis.io/blog/why-multi-agent-llm-systems-fail/)                                                             |
 
 > **Anti-pattern to avoid:** most production systems need 3–5 specialized agents, not 10+. Over-engineering topology is the most common early mistake. — [dev.to multi-agent guide](https://dev.to/aiwave/multi-agent-ai-systems-a-practical-guide-to-orchestrating-llms-for-complex-workflows-3geh)
 
 ---
 
-## 3. Parallelism Opportunities Within GAIA's Existing Tool Budget
+## 2. Parallelism Opportunities Within GAIA's Existing Tool Budget
 
-GAIA already has a 15-tool-call budget per turn. This is enough to run a *simulated* fan-out pattern within a single turn, without needing subagents.
+GAIA already has a 15-tool-call budget per turn. This is enough to run a _simulated_ fan-out pattern within a single turn, without needing subagents.
 
-### 3.1 Fan-out reads (partially supported today)
+### 2.1 Fan-out reads (partially supported today)
 
-`TURN_ENGINE §1` says "batch independent calls in one message." This is parallel *reads* — e.g. reading `CLAUDE.md`, `README.md`, and `package.json` in the same tool batch rather than sequentially.
+`TURN_ENGINE §1` says "batch independent calls in one message." This is parallel _reads_ — e.g. reading `CLAUDE.md`, `README.md`, and `package.json` in the same tool batch rather than sequentially.
 
 **Gap:** the guidance is informal. There is no explicit "read batch phase" concept in the turn structure, so GAIA frequently issues reads one at a time when it could batch them.
 
-### 3.2 Fan-out writes (already governed)
+### 2.2 Fan-out writes (already governed)
 
-Multiple independent file writes *could* be fanned out, but `TURN_ENGINE §5` governs this via `push_files` batching. The constraint here is commit atomicity and error recovery — already well-handled.
+Multiple independent file writes _could_ be fanned out, but `TURN_ENGINE §5` governs this via `push_files` batching. The constraint here is commit atomicity and error recovery — already well-handled.
 
-### 3.3 Fan-out skill execution (not supported — key gap)
+### 2.3 Fan-out skill execution (not supported — key gap)
 
 When the user chains skills (e.g. `/research-to-issues`), each stage runs sequentially with a gate between them. Independent research sub-tasks — e.g. "research pattern A" and "research pattern B" — cannot run in parallel within a single skill invocation.
 
 ---
 
-## 4. Improvement Opportunities (Prompt-Only — No Platform Changes Required)
+## 3. Improvement Opportunities (Prompt-Only — No Platform Changes Required)
 
-### 4.1 Parallel Task Lanes in `TASKS.md`
+### 3.1 Parallel Task Lanes in `TASKS.md`
 
 **Current state:** `TASKS.md` is a flat ordered checklist — purely sequential.
 
@@ -80,7 +66,7 @@ GAIA would issue all reads in the PARALLEL block as a single batched tool-call p
 
 ---
 
-### 4.2 Codified Read-Phase / Write-Phase Turn Structure
+### 3.2 Codified Read-Phase / Write-Phase Turn Structure
 
 **Current state:** `TURN_ENGINE` says batch when possible, but the guidance is informal.
 
@@ -96,7 +82,7 @@ This prevents the common failure mode of interspersed reads and writes that each
 
 ---
 
-### 4.3 Skill Fan-Out Directive
+### 3.3 Skill Fan-Out Directive
 
 **Current state:** Skills are strictly sequential — one instruction set, one action stream.
 
@@ -114,7 +100,7 @@ parallel_subtasks:
 
 ---
 
-### 4.4 Evaluator-Optimizer Loop for Plans
+### 3.4 Evaluator-Optimizer Loop for Plans
 
 **Current state:** `MEMORY_ENGINE §B.3` has a single-pass self-review checklist for `PLAN.md`.
 
@@ -131,7 +117,7 @@ This is a prompt-only change. The pattern consistently improves output quality i
 
 ---
 
-### 4.5 Context-Budget-Aware Task Scheduling
+### 3.5 Context-Budget-Aware Task Scheduling
 
 **Current state:** `TURN_ENGINE §2` defines a soft 40K token ceiling but leaves budget estimation to GAIA's in-turn judgment.
 
@@ -142,7 +128,7 @@ This is a prompt-only change. The pattern consistently improves output quality i
 
 ---
 
-## 5. What Requires Platform Changes (Out of Scope)
+## 4. What Requires Platform Changes (Out of Scope)
 
 The following improvements would require Perplexity to expose new capabilities not available in Spaces as of mid-2026:
 
@@ -155,19 +141,19 @@ For multi-agent orchestration at this level, frameworks such as LangGraph, AutoG
 
 ---
 
-## 6. Priority Order
+## 5. Priority Order
 
-| Priority | Change | Files to Edit | Effort |
-|---|---|---|---|
-| 1 | Parallel task lanes in TASKS.md | `MEMORY_ENGINE.md §B.2, §B.5` | Low |
-| 2 | Read-phase / write-phase turn structure | `TURN_ENGINE.md §4` | Low |
-| 3 | Evaluator-optimizer loop for plans | `MEMORY_ENGINE.md §B.3` | Low |
-| 4 | Skill fan-out directive | `skills/write-a-skill.md`, `SYSTEM_INSTRUCTIONS.md` | Medium |
-| 5 | Context-budget-aware task scheduling | `MEMORY_ENGINE.md §B.2, §B.4`, `TURN_ENGINE.md §2` | Medium |
+| Priority | Change                                  | Files to Edit                                       | Effort |
+| -------- | --------------------------------------- | --------------------------------------------------- | ------ |
+| 1        | Parallel task lanes in TASKS.md         | `MEMORY_ENGINE.md §B.2, §B.5`                       | Low    |
+| 2        | Read-phase / write-phase turn structure | `TURN_ENGINE.md §4`                                 | Low    |
+| 3        | Evaluator-optimizer loop for plans      | `MEMORY_ENGINE.md §B.3`                             | Low    |
+| 4        | Skill fan-out directive                 | `skills/write-a-skill.md`, `SYSTEM_INSTRUCTIONS.md` | Medium |
+| 5        | Context-budget-aware task scheduling    | `MEMORY_ENGINE.md §B.2, §B.4`, `TURN_ENGINE.md §2`  | Medium |
 
 ---
 
-## 7. Open Questions
+## 6. Open Questions
 
 - Would parallel task lanes in `TASKS.md` complicate the auto-compaction recovery logic in `§B.5`? The re-read-and-resume pattern needs to handle partial `[PARALLEL]` blocks gracefully.
 - Is the 15-tool-call cap a hard API limit or a soft prompt instruction? If hard, a 12-call read-phase fan-out leaves almost no budget for writes in the same turn — may require read and write phases to always span separate turns.
