@@ -1,0 +1,433 @@
+# GAIA vs GAIA 2.0 - MVP Test Plan
+
+## Goal
+
+Compare original GAIA with GAIA 2.0 inside **Perplexity Spaces**, using the same GitHub MCP connector and one fixed control repository.
+
+Measure only two outcomes:
+
+1. **Average response length** â€” a practical proxy for response-token use, not a measurement of total platform token cost.
+2. **First-pass task completion rate** â€” whether GAIA completes a task correctly without a correction or follow-up from you.
+
+Do **not** claim 60% token-cost reduction or 80% fewer bugsâ€ unless your collected data directly supports those figures. This MVP can support narrower, defensible claims such as â€œreduced average response length by X%â€ or â€œimproved first-pass completion by Y percentage points.
+
+---
+
+## Test Design
+
+### Hypothesis
+
+> With the same model, repository, tools, settings, and prompts, GAIA 2.0 will produce more concise responses while maintaining or improving first-pass task completion.
+
+### Versions
+
+| Variant | Configuration |
+|---|---|
+| **Control** | Original GAIA core prompt architecture (2-3 files) |
+| **Treatment** | GAIA 2.0 core architecture (5 files: `SYSTEM_PROMPT.md`, `MEMORY_ENGINE.md`, `PLAN_ENGINE.md`, `TURN_ENGINE.md`, `BUILTINS.md`) |
+
+### Constants
+
+Keep every item below the same in both Perplexity Spaces:
+
+- Model and model mode
+- GitHub account and GitHub MCP connector
+- Selected repository, branch, and commit SHA
+- Other connected tools and available Space files
+- Permission mode
+- Search settings
+- Test prompt wording
+- Skills: **do not invoke slash-command skills** during this MVP
+
+GitHub MCP remains enabled in both Spaces. It is part of GAIAâ€™s intended operating environment, so it should be a fixed condition rather than removed from the test.
+
+### Why Skills Are Omitted
+
+Skills add task-specific instructions that can independently change response length, tool use, and task quality. Excluding them keeps this experiment focused on the impact of the core prompt split. Run a separate skills-enabled test later if that reflects your normal workflow.
+
+---
+
+## Control Repository
+
+Use the GitHub repository that stores the GAIA system files.
+
+It is the best MVP control repo because it:
+
+- Requires no additional setup.
+- Contains real GAIA architecture and documentation.
+- Exercises GitHub MCP reading, code search, file discovery, and explanation.
+- Has answers you can verify quickly from the source files.
+
+### Freeze the Repository
+
+Before testing:
+
+1. Record the repo URL.
+2. Record the branch.
+3. Record the latest commit SHA.
+4. Do not modify the repo until both versions have completed all tests.
+
+If you change the repository halfway through, restart the affected task pair. The two variants must read the same files.
+
+---
+
+## Free Tool Stack
+
+| Need | Free Tool | Use |
+|---|---|---|
+| Run the agent | Perplexity Spaces | Run original GAIA and GAIA 2.0 under the same conditions |
+| Source access | GitHub MCP | Let both Spaces inspect the same frozen GAIA repository |
+| Conversation backup | Perplexity Chat Exporter or `simwai/perplexity-ai-export` | Export/retain test conversations as Markdown or JSON |
+| Measurement | Python 3 standard library | Count words and produce CSV results |
+| Scorekeeping | Google Sheets or CSV | Record first-pass pass/fail decisions and notes |
+
+A chat exporter can save the final conversation record, but manual copying into the prescribed response folders is sufficient for this MVP.
+
+---
+
+## Folder Setup
+
+Create this local folder structure:
+
+```text
+gaia-ab-test/
+          README.md
+          test-cases.csv
+          original/
+                responses/
+                evidence/
+          gaia-2/
+                responses/
+                evidence/
+          scripts/
+                analyse_length.py
+                summarise_results.py
+          results/
+                scoring.csv
+                summary.md
+                metrics.csv
+```
+
+Use matching file names for each paired result, for example:
+
+```text
+original/responses/T01.md
+gaia-2/responses/T01.md
+```
+
+Each response file should contain only the assistant's final response, not your prompt, tool timelines, or copied UI labels. This prevents UI noise from distorting word counts.
+
+---
+
+## Test Cases
+
+Run these 16 read-only, non-destructive prompts in both Spaces. They exercise the GitHub MCP features GAIA is expected to use without requiring writes, branch creation, or user confirmation.
+
+| ID | Prompt | Pass condition |
+|---|---|---|
+| T01 | `List the root-level files in this repository.` | Root files are substantially correct; no invented files |
+| T02 | `Read SYSTEM_PROMPT.md. In 3 bullets, explain its main responsibilities.` | Covers identity/behaviour, tools/coding rules, and planning or response rules |
+| T03 | `What are the three permission modes in TURN_ENGINE.md? Give one sentence for each.` | Names all three and describes each accurately |
+| T04 | `Find references to MEMORY_ENGINE.md outside MEMORY_ENGINE.md. List each file and why it references it.` | Relevant references are identified and explanations are accurate |
+| T05 | `Read PLAN_ENGINE.md and give the steps GAIA follows before executing non-trivial work.` | Matches plan-before-execution flow |
+| T06 | `What does BUILTINS.md define? List the supported built-in commands.` | Correctly identifies built-ins |
+| T07 | `Find the GitHub commit attribution rule. Quote the required co-author identity without changing it.` | Exact identity is reported correctly |
+| T08 | `Find the pull-request attribution footer rule and describe where it must appear.` | Footer requirement and placement are accurate |
+| T09 | `List the files in the skills directory and group them by likely purpose in a concise table.` | Uses repository evidence and sensible grouping |
+| T10 | `Explain the difference between MEMORY_ENGINE.md and PLAN_ENGINE.md in no more than 120 words.` | Accurate distinction and within limit |
+| T11 | `Which file governs tool-call limits and batching? Summarise its role in two sentences.` | Identifies `TURN_ENGINE.md` and explains it correctly |
+| T12 | `Find every file that mentions `.gaia/PLAN.md` and state what each mention is for.` | Relevant mentions are complete enough and correct |
+| T13 | `What should GAIA do before writing code to a repository for the first time?` | Describes discovery/read-first requirements accurately |
+| T14 | `Create a concise checklist for safely changing the planning workflow, based only on the repository rules.` | Actionable and consistent with the files |
+| T15 | `A user asks for a new feature spanning five files. Describe whether GAIA should plan first and why.` | Correctly applies plan trigger rules |
+| T16 | `Compare the responsibilities of SYSTEM_PROMPT.md, TURN_ENGINE.md, and BUILTINS.md in a short table.` | Accurate, concise, and clearly separated responsibilities |
+
+### Optional Expansion
+
+After the MVP, add 8-16 tasks from a second small TypeScript or Next.js repository. This measures whether the result generalises beyond GAIA's own repo. Do not mix those tasks into the MVP result unless both variants run the entire combined suite.
+
+---
+
+## Run Procedure
+
+### 1. Prepare Both Spaces
+
+1. Create or duplicate two Perplexity Spaces: **Original GAIA** and **GAIA 2.0**.
+2. Put the respective core prompt files in each Space.
+3. Connect the same GitHub MCP account to both Spaces.
+4. Confirm both Spaces can access the same GAIA repository and frozen commit SHA.
+5. Select the same model and permission mode in both.
+6. Do not use slash-command skills.
+
+Create `README.md` with the model, date, repo URL, branch, commit SHA, connector configuration, and prompt architecture for each variant.
+
+### 2. Alternate Variants
+
+Avoid running all original tests first and all GAIA 2.0 tests later. Conditions can drift across a long session.
+
+For each test ID, alternate the order:
+
+- Odd IDs: Original GAIA first, then GAIA 2.0.
+- Even IDs: GAIA 2.0 first, then Original GAIA.
+
+For each task:
+
+1. Start a new thread in the chosen Space.
+2. Paste the prompt exactly as written.
+3. Let the response complete.
+4. Do not correct, clarify, or provide extra context.
+5. Copy only the final assistant response to the matching response file.
+6. Record whether the result passed on first attempt using the scoring rules below.
+7. Repeat the exact prompt in the other Space immediately.
+
+Do not re-run a task because you prefer one answer. If a network or connector failure occurs, mark it **Invalid** and rerun the pair later; do not count either response from that pair.
+
+### 3. Track Results
+
+Create `results/scoring.csv`:
+
+```csv
+id,variant,run_order,status,first_pass,reason,manual_follow_up_needed,notes
+T01,original,1,valid,pass,Correct root file list,no,
+T01,gaia-2,2,valid,pass,Correct root file list,no,
+```
+
+Use these values:
+
+- `status`: `valid` or `invalid`
+- `first_pass`: `pass` or `fail`
+- `manual_follow_up_needed`: `yes` or `no`
+
+---
+
+## Metric 1: Response Length
+
+### Definition
+
+For each valid task, count words in the final assistant response.
+
+\[
+\text{Response length reduction} = \frac{\text{mean original words} - \text{mean GAIA 2.0 words}}{\text{mean original words}} \times 100
+\]
+
+This is a **response-size metric**. It may be a useful proxy for output-token use, but it does not measure hidden system prompt tokens, retrieved content, tool-token use, or Perplexity billing. Do not label it â€œtoken costâ€ in a report or rÃ©sumÃ©.
+
+### Script
+
+Save as `scripts/analyse_length.py`:
+
+```python
+from pathlib import Path
+import csv
+import re
+import statistics
+
+ROOT = Path(__file__).resolve().parents[1]
+RESULTS = ROOT / "results"
+
+
+def word_count(text: str) -> int:
+    return len(re.findall(r"\b[\w'-]+\b", text))
+
+
+def response_counts(variant: str) -> dict[str, int]:
+    folder = ROOT / variant / "responses"
+    return {
+        file.stem: word_count(file.read_text(encoding="utf-8"))
+        for file in sorted(folder.glob("T*.md"))
+    }
+
+
+def valid_passes() -> set[tuple[str, str]]:
+    valid = set()
+    with (RESULTS / "scoring.csv").open(newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            if row["status"] == "valid":
+                valid.add((row["id"], row["variant"]))
+    return valid
+
+original = response_counts("original")
+gaia2 = response_counts("gaia-2")
+valid = valid_passes()
+
+paired_ids = sorted(
+    task_id for task_id in original.keys() & gaia2.keys()
+    if (task_id, "original") in valid and (task_id, "gaia-2") in valid
+)
+
+rows = []
+for task_id in paired_ids:
+    old_words = original[task_id]
+    new_words = gaia2[task_id]
+    rows.append({
+        "id": task_id,
+        "original_words": old_words,
+        "gaia2_words": new_words,
+        "difference_words": new_words - old_words,
+        "reduction_percent": round((old_words - new_words) / old_words * 100, 1) if old_words else 0,
+    })
+
+if not rows:
+    raise SystemExit("No valid paired responses found.")
+
+old_values = [r["original_words"] for r in rows]
+new_values = [r["gaia2_words"] for r in rows]
+mean_old = statistics.mean(old_values)
+mean_new = statistics.mean(new_values)
+reduction = (mean_old - mean_new) / mean_old * 100
+
+with (RESULTS / "metrics.csv").open("w", newline="", encoding="utf-8") as f:
+    writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+    writer.writeheader()
+    writer.writerows(rows)
+
+print(f"Valid paired tasks: {len(rows)}")
+print(f"Original mean response length: {mean_old:.1f} words")
+print(f"GAIA 2.0 mean response length: {mean_new:.1f} words")
+print(f"Response length reduction: {reduction:.1f}%")
+print(f"Original median: {statistics.median(old_values):.1f} words")
+print(f"GAIA 2.0 median: {statistics.median(new_values):.1f} words")
+```
+
+Run:
+
+```bash
+python scripts/analyse_length.py
+```
+
+### Interpretation
+
+- **Positive reduction**: GAIA 2.0 used fewer response words.
+- **Near zero**: modularisation did not noticeably change response size for these tasks.
+- **Negative reduction**: GAIA 2.0 used more response words; inspect whether it was more complete or simply more verbose.
+
+Do not treat a shorter answer as automatically better. Pair this metric with first-pass completion.
+
+---
+
+## Metric 2: First-Pass Task Completion
+
+### Definition
+
+A response passes if it answers the task correctly and usefully **without any correction, clarification, or retry from you**.
+
+\[
+\text{First-pass completion rate} = \frac{\text{valid tasks passed first time}}{\text{valid tasks}} \times 100
+\]
+
+\[
+\text{Improvement in percentage points} = \text{GAIA 2.0 completion rate} - \text{Original completion rate}
+\]
+
+Report improvement in **percentage points (pp)**, not relative percent. For example, 12 of 16 versus 14 of 16 is 75% versus 87.5%, or **+12.5 pp**.
+
+### Simple Pass/Fail Rubric
+
+Mark **Pass** only if all apply:
+
+- It follows the explicit request, including format and word limit.
+- It uses the correct repository files or GitHub MCP evidence when the task requires it.
+- Key facts are correct and it does not invent files, rules, or tool capabilities.
+- The answer is usable without asking you to rescue it with a follow-up.
+
+Mark **Fail** if any apply:
+
+- Materially wrong, incomplete, fabricated, or off-topic.
+- Misses a stated format constraint.
+- Uses a tool incorrectly or cannot find information that is available through GitHub MCP.
+- Requires a corrective follow-up for a useful answer.
+
+### Reduce Personal Bias
+
+1. Score both paired answers only after all runs finish.
+2. Hide the variant name while scoring if possible: copy answers into a neutral sheet labelled `A` and `B`.
+3. For each failure, write a one-line reason in `scoring.csv`.
+4. If uncertain, mark the task as `invalid` for **both** variants rather than favouring either.
+
+---
+
+## Result Summary
+
+Save as `results/summary.md` after running both scripts and scoring all tasks:
+
+```markdown
+# GAIA vs GAIA 2.0 â€” MVP Results
+
+## Method
+
+- Platform: Perplexity Spaces
+- Variants: Original GAIA (control) and GAIA 2.0 (five-file architecture)
+- Model: [same model name]
+- Repository: [URL]
+- Frozen commit: [SHA]
+- GitHub MCP: enabled in both variants
+- Skills: not invoked
+- Valid paired tasks: [N] of 16
+
+## Metrics
+
+| Metric | Original GAIA | GAIA 2.0 | Change |
+|---|---:|---:|---:|
+| Mean final-response length | [X] words | [Y] words | [Z]% reduction/increase |
+| First-pass completion | [A]/[N] ([A%]%) | [B]/[N] ([B%]%) | [+/-C] pp |
+
+## Interpretation
+
+GAIA 2.0 produced [shorter/longer] final responses and [improved/reduced/no meaningful change in] first-pass completion for this 16-task, GitHub-MCP-enabled Perplexity Spaces test.
+
+## Limitations
+
+- Response words are a proxy for output size, not total Perplexity token usage or billing cost.
+- One repository and 16 tasks are a small sample.
+- Perplexity model behaviour and tool availability can vary over time.
+- Results apply to the tested prompt versions, model, repository commit, and configuration.
+```
+
+---
+
+## Resume Claims You Can Defend
+
+Use only the result you actually measured.
+
+### If both improve
+
+> Modularised a Perplexity Spaces coding agent into five focused prompt files; in a controlled 16-task GitHub MCP evaluation, reduced average final-response length by **X%** while improving first-pass task completion by **Y percentage points**.
+
+### If only completion improves
+
+> Re-architected a Perplexity Spaces coding agent into five focused prompt files, improving first-pass completion from **A%** to **B%** in a controlled 16-task GitHub MCP evaluation.
+
+### If only response length improves
+
+> Modularised a Perplexity Spaces coding agent into five focused prompt files, reducing average final-response length by **X%** across a controlled 16-task GitHub MCP evaluation while maintaining **Y%** first-pass completion.
+
+Avoid saying:
+
+- â€œReduced total token cost by X%â€ â€” unless Perplexity provides total token/cost telemetry for both variants.
+- â€œReduced bugs by X%â€ â€” unless you run a separate controlled regression test that measures actual defects after changes.
+- â€œImproved performanceâ€ without naming the measured metric and test size.
+
+---
+
+## Optional Follow-Up Tests
+
+After the MVP, run separate experiments rather than changing this one:
+
+1. **Skills-enabled suite**: use the same skills and prompts in both variants to test real workflows.
+2. **Prompt-change regression suite**: apply equivalent changes to each architecture, re-run the suite, and measure regression rate. This is the appropriate way to evaluate a â€œfewer bugs from changesâ€ claim.
+3. **External-repository suite**: repeat on one small TypeScript/Next.js repository to assess generalisation.
+4. **Larger sample**: expand to 32â€“50 paired tasks and calculate confidence intervals.
+
+---
+
+## MVP Success Criteria
+
+The test is complete when:
+
+- [ ] Both Perplexity Spaces use the same model, GitHub MCP connector, frozen repo commit, and settings.
+- [ ] No slash-command skills were invoked.
+- [ ] All 16 task pairs were run or marked invalid with a reason.
+- [ ] Final-only responses were saved using matching task IDs.
+- [ ] Every valid response was scored with the same rubric.
+- [ ] Mean response length and first-pass completion were calculated.
+- [ ] Any rÃ©sumÃ© statement uses the measured result and sample size.
