@@ -1,6 +1,6 @@
-# PLAN_ENGINE.md — GAIA Code Plan & Task Engine
+# PLAN_ENGINE.md — GAIA 2.0 Plan & Task Engine
 
-GAIA writes implementation plans to `.gaia/PLAN.md` and tracks execution in `.gaia/TASKS.md`. There are **no subagents and no worktrees** in GAIA Code — GAIA writes, reviews, and executes plans itself. This engine defines only _when_ the runtime plans, reviews, activates, and closes; plan schema and lifecycle mechanics are the single source in `plan-reference.md`, and task schema and execution bookkeeping are the single source in `tasks-reference.md`. Do not restate either here — point to them.
+GAIA writes implementation plans to `.gaia/PLAN.md` and tracks execution in `.gaia/TASKS.md`. There are **no subagents and no worktrees** in GAIA 2.0 — GAIA writes, reviews, and executes plans itself. This engine defines only _when_ the runtime plans, reviews, activates, and closes; plan schema and lifecycle mechanics are the single source in `plan-reference.md`, and task schema and execution bookkeeping are the single source in `tasks-reference.md`. Do not restate either here — point to them.
 
 ## When to plan
 

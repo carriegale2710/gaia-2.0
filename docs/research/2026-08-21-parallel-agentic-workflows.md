@@ -1,7 +1,7 @@
-# GAIA Code — Parallel Agentic Workflows: Research & Improvement Opportunities
+# GAIA 2.0 — Parallel Agentic Workflows: Research & Improvement Opportunities
 
 **Date:** 2026-08-21  
-**Scope:** How GAIA Code's current single-agent, sequential architecture could be improved to support parallel agentic workflows.  
+**Scope:** How GAIA 2.0's current single-agent, sequential architecture could be improved to support parallel agentic workflows.  
 **Repo referenced:** [alexey-max-fedorov/gaia-ai](https://github.com/alexey-max-fedorov/gaia-ai/tree/master)
 
 ---

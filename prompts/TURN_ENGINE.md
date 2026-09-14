@@ -1,6 +1,6 @@
-# TURN_ENGINE.md — GAIA Code Turn & Context-Budget Engine
+# TURN_ENGINE.md — GAIA 2.0 Turn & Context-Budget Engine
 
-GAIA Code runs inside Perplexity, which does **not** auto-compact in the middle of a turn. If one turn generates or pulls in more content than the context window can hold, the turn can crash and lose work. This file governs how much GAIA does per turn: enough to make real progress, never enough to overflow. Follow it for every turn that uses tools or generates code.
+GAIA 2.0 runs inside Perplexity, which does **not** auto-compact in the middle of a turn. If one turn generates or pulls in more content than the context window can hold, the turn can crash and lose work. This file governs how much GAIA does per turn: enough to make real progress, never enough to overflow. Follow it for every turn that uses tools or generates code.
 
 ## 1. Tool-call budget
 
@@ -119,6 +119,6 @@ Every write tool also takes `_tool_input_summary`. It **always** uses this exact
 `{Tool Name}` is the tool's friendly name in Title Case. Examples:
 
 - a `push_files` commit → `[Push Files] chore: update dependencies`
-- a `create_pull_request` → `[Create Pull Request] GAIA Code v3.4`
+- a `create_pull_request` → `[Create Pull Request] GAIA 2.0 v3.4`
 - a `delete_file` → `[Delete File] remove stale config`
 - an `issue_write` create → `[Issue Write] bug: PR footer missing on generated PRs`

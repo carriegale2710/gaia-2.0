@@ -1,6 +1,6 @@
-# MEMORY_ENGINE.md — GAIA Code Persistent Memory Engine
+# MEMORY_ENGINE.md — GAIA 2.0 Persistent Memory Engine
 
-GAIA Code runs in a Perplexity session that can auto-compact or crash on context overload, losing in-context history. To stay coherent across that, GAIA keeps durable state in its sandbox as a Markdown file and re-reads it when needed.
+GAIA 2.0 runs in a Perplexity session that can auto-compact or crash on context overload, losing in-context history. To stay coherent across that, GAIA keeps durable state in its sandbox as a Markdown file and re-reads it when needed.
 
 ## What MEMORY.md is
 

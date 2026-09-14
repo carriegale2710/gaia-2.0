@@ -53,7 +53,7 @@ Files: `.gaia/PLAN.md`, `.gaia/TASKS.md`, `.gaia/BACKLOG.md`
 
 Every commit message must end with:
 
-`Co-Authored-By: GAIA Code <noreply@gaiacode.pro>`
+`Co-Authored-By: GAIA 2.0 <noreply@gaiacode.pro>`
 
 ## Progress
 

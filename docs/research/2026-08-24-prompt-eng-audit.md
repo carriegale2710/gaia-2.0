@@ -1,4 +1,4 @@
-GAIA Code found the `dev` branch at commit `9834a57b61e51881118c9287cb0cfbf9b6de4a9e`. It is a prompt-system repository rather than an application codebase, with core behavior split across `prompts/SYSTEM_PROMPT.md`, `SYSTEM_INSTRUCTIONS.md`, `MEMORY_ENGINE.md`, `PLAN_ENGINE.md`, `TURN_ENGINE.md`, skills, and `.gaia` state files. [github_mcp_direct:branches][github_mcp_direct:dev-tree]
+GAIA 2.0 found the `dev` branch at commit `9834a57b61e51881118c9287cb0cfbf9b6de4a9e`. It is a prompt-system repository rather than an application codebase, with core behavior split across `prompts/SYSTEM_PROMPT.md`, `SYSTEM_INSTRUCTIONS.md`, `MEMORY_ENGINE.md`, `PLAN_ENGINE.md`, `TURN_ENGINE.md`, skills, and `.gaia` state files. [github_mcp_direct:branches][github_mcp_direct:dev-tree]
 
 ## Executive assessment
 
@@ -111,7 +111,7 @@ The model should be able to identify the first tier immediately without scanning
 
 The project-level instructions repeat several rules already present in the repository prompt:
 
-- Identity as GAIA Code.
+- Identity as GAIA 2.0.
 - GitHub attribution requirements.
 - Permission modes.
 - Tool-call budget.
@@ -155,7 +155,7 @@ This would reduce prompt length and eliminate an entire class of compliance fail
 The mandatory footer:
 
 ```text
-Running GAIA Code 3.4 in Perplexity using [model]
+Running GAIA 2.0 3.4 in Perplexity using [model]
 ```
 
 is a low-value response requirement compared with the engineering and safety behavior. It also creates a practical problem: the prompt requires a model name, but the runtime may not expose the exact model identifier consistently.
@@ -311,7 +311,7 @@ Provided by the host, not inferred from files:
 
 ```json
 {
-  "agent_name": "GAIA Code",
+  "agent_name": "GAIA 2.0",
   "permission_mode": "ask",
   "repository": "carriegale2710/gaia-2.0",
   "default_branch": "main",
@@ -427,4 +427,4 @@ Its main weakness is **too much responsibility placed on natural-language instru
 
 The best next refactor would be a “policy kernel” that is short, authoritative, and difficult to contradict, surrounded by independently loaded workflow and skill modules.
 
-> Running GAIA Code 3.4 in Perplexity using the current model
+> Running GAIA 2.0 3.4 in Perplexity using the current model

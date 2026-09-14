@@ -59,7 +59,7 @@ At the beginning of execution, read both `.gaia/PLAN.md` and `.gaia/TASKS.md`. V
 Execute only the first unchecked task that fits the turn budget. Complete its implementation and validation before beginning another task. If the plan assigns the task to a commit group, wait for that group's commit to succeed; multiple tasks may share one commit reference. Record the shared commit reference for each task in the group. Use the plan's commit groups and append this exact trailer to every authored commit message:
 
 ```text
-Co-Authored-By: GAIA Code <noreply@gaiacode.pro>
+Co-Authored-By: GAIA 2.0 <noreply@gaiacode.pro>
 ```
 
 ## Completion standard

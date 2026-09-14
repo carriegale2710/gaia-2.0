@@ -1,12 +1,12 @@
 ---
 name: doctor
 description: |
-  Verify this Space's GAIA Code deployment: engine files present, versions
+  Verify this Space's GAIA 2.0 deployment: engine files present, versions
   consistent, memory and permission mode initialized, GitHub MCP reachable.
   Read-only — reports problems and how to fix them, changes nothing.
 ---
 
-# Doctor: verify the GAIA Code deployment
+# Doctor: verify the GAIA 2.0 deployment
 
 When the user runs `/doctor`, run these checks and print a ✅/⚠️/⏭️ checklist.
 This skill is **read-only**: no commits, no file writes, no Space changes.
@@ -23,8 +23,8 @@ This skill is **read-only**: no commits, no file writes, no Space changes.
    empty — GAIA's slash-command skills will not be available. Fix: re-upload
    the skills bundle per https://gaiacode.pro/get-started.
 3. **Version consistency.** In `SYSTEM_PROMPT.md`, the header
-   `# GAIA CODE — SYSTEM PROMPT (v<version>)` and the PART VII footer rule
-   `Running GAIA Code <version>` must carry the same number. ⚠️ on mismatch —
+   `# GAIA 2.0 — SYSTEM PROMPT (v<version>)` and the PART VII footer rule
+   `Running GAIA 2.0 <version>` must carry the same number. ⚠️ on mismatch —
    the Space is running mixed file versions; redeploy all files.
 4. **Up to date?** Read `website/package.json` from repo
    `alexey-max-fedorov/gaia-ai` on `master` via GitHub MCP `get_file_contents`

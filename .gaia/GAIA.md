@@ -1,4 +1,4 @@
-# GAIA Code — Repository Instructions
+# GAIA 2.0 — Repository Instructions
 
 Repository-specific conventions for `carriegale2710/gaia-2.0`. Core engine files remain authoritative.
 

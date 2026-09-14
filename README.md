@@ -1,8 +1,8 @@
-# GAIA Code
+# GAIA 2.0
 
 **Version:** 3.4 **Repository:** `alexey-max-fedorov/gaia-ai`
 
-GAIA Code is a Claude Code-inspired prompt system for Perplexity Spaces. It brings persistent memory, a plan engine, context-budgeted turns, GitHub MCP integration, and a slash-command skill engine into a Perplexity conversation.
+GAIA 2.0 is a Claude Code-inspired prompt system for Perplexity Spaces. It brings persistent memory, a plan engine, context-budgeted turns, GitHub MCP integration, and a slash-command skill engine into a Perplexity conversation.
 
 ---
 
@@ -18,7 +18,7 @@ GAIA Code is a Claude Code-inspired prompt system for Perplexity Spaces. It brin
    - `prompts/TURN_ENGINE.md` — turns + context budget
 4. Set the Space model (GLM-5.2 or Claude Sonnet 5.0 Thinking recommended).
 5. _(Optional)_ Connect GitHub via Perplexity Connectors so GAIA can read and write your repositories.
-6. Done — GAIA Code is ready to use.
+6. Done — GAIA 2.0 is ready to use.
 
 > GAIA reads all five uploaded files on startup; skipping any one disables that engine. The website's [Get Started](https://gaiacode.pro/get-started) page mirrors these steps with copy/download buttons for each file.
 
@@ -26,7 +26,7 @@ GAIA Code is a Claude Code-inspired prompt system for Perplexity Spaces. It brin
 
 ## What's Included
 
-GAIA Code is **four prompt files** that drive **four engines**.
+GAIA 2.0 is **four prompt files** that drive **four engines**.
 
 ### `prompts/SYSTEM_INSTRUCTIONS.md` — the gate
 
@@ -55,15 +55,15 @@ Context-budget estimation so a turn never overflows the window, a 15-call tool b
 - **Plan Mode** — structured planning with an explicit approval gate before any code is written.
 - **GitHub MCP** — read repos, create branches, push commits, open PRs, manage issues.
 - **Persistent memory** — coherent across auto-compaction and context-overflow crashes, with `export memory` / `import memory` to carry it between conversations.
-- **Skill engine** — slash-command skills loaded from Space files (e.g. `/humanizer`, or `/update` to check for a newer GAIA Code version), installable straight from a GitHub repo ("install the skill from gh owner/repo").
+- **Skill engine** — slash-command skills loaded from Space files (e.g. `/humanizer`, or `/update` to check for a newer GAIA 2.0 version), installable straight from a GitHub repo ("install the skill from gh owner/repo").
 - **Permission modes** — choose how GAIA handles tool-call approval: **Ask Permissions** (default — it asks before every write: commit, push, PR, issue, merge), **Accept Edits** (routine writes run free; merges, repo creation, and default-branch writes still ask), or **Bypass Permissions** (it runs every tool call without asking). Toggle with `/ask-permissions`, `/accept-edits`, and `/dangerously-skip-permissions`; the choice is saved to memory so it survives auto-compaction.
 - **Built-in commands** — `/status` (version, permission mode, plan/task progress, and memory at a glance) and `/help` (every built-in command plus the skills uploaded to your Space).
 
 ### Bundled skills
 
-GAIA Code ships with optional slash-command skills you can upload as Space Files:
+GAIA 2.0 ships with optional slash-command skills you can upload as Space Files:
 
-- **`prompts/update.md`** (`/update`) — checks whether a newer GAIA Code version is available. It reads the latest released version from this repo's `website/package.json`, compares it to the version your Space is running, and if you're behind, points you to [Get Started](https://gaiacode.pro/get-started) to redeploy.
+- **`prompts/update.md`** (`/update`) — checks whether a newer GAIA 2.0 version is available. It reads the latest released version from this repo's `website/package.json`, compares it to the version your Space is running, and if you're behind, points you to [Get Started](https://gaiacode.pro/get-started) to redeploy.
 - **`prompts/doctor.md`** (`/doctor`) — verifies your deployment: engine files present, versions consistent, memory initialized, GitHub MCP connected. Read-only.
 - **`prompts/pr-review.md`** (`/pr-review`) — reviews a pull request end to end (full diff, every commit) and posts the findings as a PR review via GitHub MCP.
 

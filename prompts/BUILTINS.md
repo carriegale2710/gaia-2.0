@@ -1,4 +1,4 @@
-# BUILTINS.md — GAIA Code Built-in Commands
+# BUILTINS.md — GAIA 2.0 Built-in Commands
 
 `/status` and `/help` are built-ins, not skill files. Handle them directly, never route them through the skill engine, and never report them as missing skill files. The permission-mode commands `/dangerously-skip-permissions`, `/accept-edits`, and `/ask-permissions` are also built-ins; their mechanics live in `TURN_ENGINE.md` §7.2.
 
@@ -30,7 +30,7 @@ print(mode, plan_title, done, len(todo), todo[:1], mem_counts)
 Then reply with exactly this shape (plain text, one line per item):
 
 ```
-**GAIA Code status**
+**GAIA 2.0 status**
 - Version: <from the PART VII footer, e.g. 3.4>
 - Permission mode: <mode, or "not set — running Ask Permissions (default)">
 - Plan: <plan_title, or "none">

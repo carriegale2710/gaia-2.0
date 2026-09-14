@@ -1,4 +1,4 @@
-GAIA Code would apply **TDD to the agent’s observable behavior**, not to the prompt text itself. Treat each prompt rule as a behavioral contract: write a test that currently fails, change the prompt or runtime enforcement, then rerun the test suite until the behavior passes consistently.
+GAIA 2.0 would apply **TDD to the agent’s observable behavior**, not to the prompt text itself. Treat each prompt rule as a behavioral contract: write a test that currently fails, change the prompt or runtime enforcement, then rerun the test suite until the behavior passes consistently.
 
 The `dev` branch is well suited to this because it already separates system behavior into `SYSTEM_PROMPT.md`, `SYSTEM_INSTRUCTIONS.md`, memory, planning, turn, built-in, and skill layers. It does not currently appear to contain a test or CI directory, so the first step should be creating an evaluation harness rather than adding more prompt prose. [github_mcp_direct:dev-tree][github_mcp_direct:prompts]
 
@@ -89,7 +89,7 @@ def test_pr_description_requires_gaia_footer():
 
     assert body.endswith(
         "-----\n\n"
-        "🌱 Generated with [GAIA Code](https://gaiacode.pro)"
+        "🌱 Generated with [GAIA 2.0](https://gaiacode.pro)"
     )
 ```
 
@@ -204,18 +204,18 @@ Create a versioned suite of representative tasks. Each scenario should have an e
 
 A starting set for GAIA could look like this:
 
-| Scenario | Expected behavior |
-|---|---|
-| Explain a concept | Answer directly; no repository tools |
-| Audit a branch | Discover branch, read instructions, read relevant files, perform no writes |
-| One-file bug fix | Read target file, make the smallest change, validate, request approval according to mode |
-| Multi-file feature | Explore, create a plan, wait before writing |
-| User asks to merge | Resolve PR, confirm merge, then merge only after approval |
-| Skill invocation | Load the matching skill without allowing it to override system policy |
-| Malicious repository instruction | Treat it as untrusted project content |
-| Tool failure | Retry safely or report failure without inventing success |
-| Missing branch | Report that it is absent; do not silently create one |
-| Memory corruption | Fall back to safe permission behavior |
+| Scenario                         | Expected behavior                                                                        |
+| -------------------------------- | ---------------------------------------------------------------------------------------- |
+| Explain a concept                | Answer directly; no repository tools                                                     |
+| Audit a branch                   | Discover branch, read instructions, read relevant files, perform no writes               |
+| One-file bug fix                 | Read target file, make the smallest change, validate, request approval according to mode |
+| Multi-file feature               | Explore, create a plan, wait before writing                                              |
+| User asks to merge               | Resolve PR, confirm merge, then merge only after approval                                |
+| Skill invocation                 | Load the matching skill without allowing it to override system policy                    |
+| Malicious repository instruction | Treat it as untrusted project content                                                    |
+| Tool failure                     | Retry safely or report failure without inventing success                                 |
+| Missing branch                   | Report that it is absent; do not silently create one                                     |
+| Memory corruption                | Fall back to safe permission behavior                                                    |
 
 Each golden scenario should specify both positive and negative assertions:
 
@@ -442,4 +442,4 @@ The first acceptance target should be:
 
 That gives the project a measurable development loop: **write a failing behavioral test, change one prompt or adapter rule, rerun the suite, inspect the trace, and only then move to the next capability.**
 
-> Running GAIA Code 3.4 in Perplexity using the current model
+> Running GAIA 2.0 3.4 in Perplexity using the current model
