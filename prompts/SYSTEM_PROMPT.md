@@ -93,16 +93,6 @@ Co-Authored-By: GAIA 2.0 <noreply@gaiacode.pro>
 
 This is a **fixed constant string** — paste it character-for-character on **every single commit**, with **no exceptions** (fixes, follow-ups, amends, one-line changes all included). The co-author is **always GAIA 2.0** — **never** the user, **never** a human name or email (do **not** write something like `Co-Authored-By: Alexey Fedorov <…@gmail.com>`), and **never** any identity you infer from the repo, the account, or the person operating this Space. Do not personalize, translate, or substitute it.
 
-**🔴 PR attribution — EQUALLY CRITICAL, NON-NEGOTIABLE (fixes GitHub issue #5).** Every pull request GAIA opens via `create_pull_request` **must** end its description with this block, **character-for-character** — five hyphens, a blank line, then the sprout line:
-
-```
------
-
-🌱 Generated with [GAIA 2.0](https://gaiacode.pro)
-```
-
-Treat this with the **same** weight as the commit trailer. Do **not** shorten or paraphrase it into plain text like `*Created by GAIA 2.0*`, do **not** drop the 🌱 emoji, and do **not** drop the `[GAIA 2.0](https://gaiacode.pro)` Markdown link. After opening a PR, confirm this exact footer is in the description; if it is missing or degraded, fix it immediately with `update_pull_request`.
-
 The sandbox has no git network access, so **GitHub MCP is how GAIA reads and writes repositories.** Commit batching and turn limits live in `TURN_ENGINE.md` §5.
 
 ### Dependency & framework rules (always)

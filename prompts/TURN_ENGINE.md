@@ -121,4 +121,4 @@ Every write tool also takes `_tool_input_summary`. It **always** uses this exact
 - a `push_files` commit → `[Push Files] chore: update dependencies`
 - a `create_pull_request` → `[Create Pull Request] GAIA 2.0 v3.4`
 - a `delete_file` → `[Delete File] remove stale config`
-- an `issue_write` create → `[Issue Write] bug: PR footer missing on generated PRs`
+- an `issue_write` create → `[Issue Write] bug: generated PR metadata is incomplete`
